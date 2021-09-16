@@ -12,50 +12,49 @@
 #include <set>
 #include <tuple>
 
+struct CellParam {
+    int n;
+    int b1;
+};
+
 template<typename Iterator>
 void cartProduct(std::set<int> const &n, std::set<float> const &b1, Iterator out) {
     // Good, ol' fashioned nested for loops like your mom used to make (input: several vectors and an iterator
     // output: vector of tuples.)
     for (int i : n) {
         for (float j : b1) {
-            *out++ = std::make_tuple(i, j);
+            struct CellParam temp;
+            temp.n = i;
+            temp.b1 = j;
+            *out++ = temp;
         }
     }
 }
 
 template<typename T>
-void strToType(std::string const &str, T *value, int range) {
+T strToType(std::string const &str, int range) {
     // takes in string, transforms to type 'T' and checks whether range is met.
 
-    if (typeid(T) == typeid(int)) {
-        *value = std::stoi(str);
-    } else if (typeid(T) == typeid(float)) {
-        *value = std::stof(str);
-    } else {
-        throw std::bad_typeid();
-    }
+    T value = (typeid(T) == typeid(int)) ? std::stoi(str) :
+              (typeid(T) == typeid(float)) ? std::stof(str) :
+              throw std::bad_typeid();
 
-    if (*value > 0 && range > 0 || *value >= 0 && range == 0 || range < 0) return;
+    if (value > 0 && range > 0 || value >= 0 && range == 0 || range < 0) return value;
     throw std::out_of_range("One or more arguments did not follow the range specifications.");
 }
 
 template<typename T>
-void parse_params(std::string str, std::vector<T> *result,  int range) { // Here
+std::vector<T> parse_params(std::string str, int range) { // Here
     // Takes in user entered parameters, cleans them, then outputs 2D array of numeric parameters.
-    T temp;
+    std::vector<T> result;
 
     while (!empty(str)) {
         std::size_t found = str.find(',');
-        if (found != std::string::npos) {
-            strToType<T>(str.substr(0, found), &temp, range);
-            result->push_back(temp);
-            str = str.substr(++found);
-        } else {
-            strToType<T>(str.substr(0, found), &temp, range);
-            result->push_back(temp);
-            str = "";
-        }
+        result.push_back(strToType<T>(str.substr(0, found), range));
+        str = found == std::string::npos ? "" : str.substr(++found);
     }
+
+    return result;
 }
 
 int main() {
@@ -73,8 +72,8 @@ int main() {
     std::cout << "Beta 1 (First Parameter): ";
     getline (std::cin, entBOne);
     try {
-        parse_params<int>(entSizes, &sampleSizes, 1); // The address of this thing is sent to...
-        parse_params<float>(entBOne, &betaOne, -1);
+        sampleSizes = parse_params<int>(entSizes, 1);
+        betaOne = parse_params<float>(entBOne, -1);
     }
     catch (std::invalid_argument& e) {
         std::cout << "Error in parsing your arguments: Please only use numerals and commas in input line." << std::endl;
@@ -133,8 +132,9 @@ int main() {
     std::set<int> n = std::set<int>(sampleSizes.begin(), sampleSizes.end());
     std::set<float> b1 = std::set<float>(betaOne.begin(), betaOne.end());
 
-    std::vector<std::tuple<int, float>> cellParams;
-    cartProduct(n, b1, back_inserter(cellParams));
+    std::vector<CellParam> allCells;
+    cartProduct(n, b1, back_inserter(allCells));
+    // TO DO: Test cartProduct with the new struct, then add confirm prompt and make Simulation class.
 
     return 0;
 }
