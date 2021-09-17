@@ -3,4 +3,4 @@ project(MA_Thesis)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(MA_Thesis main.cpp)
+add_executable(MA_Thesis main.cpp SimCell.cpp SimCell.h)
