@@ -5,6 +5,9 @@
 
 #include <iostream>
 #include <string>
+#include <dlib/matrix.h>
+
+#include "LogLik.h"
 
 #pragma once
 
@@ -17,9 +20,11 @@ class SimCell {
 private:
     const int _REP = 10;
     std::string _fileName;
-    int _n{};
-    float _b1{};
+    int _n;
+    float _b1;
 public:
     SimCell(CellParam p, std::string fileName);
+    double logLik(const colvec &theta);
+    colvec logLik_d(const colvec &theta);
     void run();
 };

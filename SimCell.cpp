@@ -6,8 +6,8 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include <exception>
 #include <fstream>
+#include <dlib/matrix.h>
 
 #include "SimCell.h"
 
@@ -25,14 +25,27 @@ void SimCell::run() {
     std::streambuf *buf;
     std::ofstream of;
 
+    // Make design matrix
+    dlib::matrix<double> x(_n, 2);
+    dlib::set_colm(x, 0) = 1;
+    dlib::set_colm(x, 1) = dlib::randm(_n, 1);
+    std::cout << x << std::endl;
+
+    // Make design matrix
+    for (int i = 0; i < _REP; i++) {
+        ;
+    }
+/*
+    // Opens a buffer!
     if(_fileName[0] != 0) {
         of.open(_fileName, std::ios::out | std::ios::app);
         buf = of.rdbuf();
     } else {
         buf = std::cout.rdbuf();
     }
-
     std::ostream out(buf);
-    out << "Test" << std::endl;
-}
 
+
+
+    if (of.is_open()) of.close();*/
+}

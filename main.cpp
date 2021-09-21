@@ -60,7 +60,7 @@ std::set<T> parse_params(std::string str, int range) { // Here
     return std::set<T>(entry.begin(), entry.end());
 }
 
-int main() {
+/* int main() {
     std::set<int> n;
     std::set<float> b1;
     std::string entSizes, entBOne;
@@ -77,8 +77,8 @@ int main() {
 
     if (entry == 'y') {
         std::cout << "Skipping input steps..." << std::endl;
-        n = {100, 500, 1000};
-        b1 = {0.5, 1, 2};
+        n = {10};
+        b1 = {1};
     } else {
         // Asking and processing simulation parameters
         std::cout << "Please enter the following parameters separated by commas:" << std::endl;
@@ -165,4 +165,4 @@ int main() {
     }
 
     return 0;
-}
+} */

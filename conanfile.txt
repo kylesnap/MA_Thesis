@@ -1,0 +1,5 @@
+[requires]
+dlib/19.21
+
+[generators]
+cmake
