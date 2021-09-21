@@ -18,6 +18,6 @@ private:
 public:
     LogLik(dlib::matrix<double> x, dlib::matrix<double> y) : _x(std::move(x)), _y(std::move(y)) {};
 
-    dlib::matrix<double> logLik(const colvec &theta);
+    double logLik(const colvec &theta);
     colvec logLik_d(const colvec &theta);
 };
