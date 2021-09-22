@@ -1,1 +1,3 @@
 /cmake-build-debug/
+/tests/catch.hpp
+/.idea/
