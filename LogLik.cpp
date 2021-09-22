@@ -26,13 +26,28 @@ double LogLik::logLik(const colvec &theta) {
     g = _x * dlib::trans(theta); // Linear combination of x and theta
     for (int i = 0; i < g.nr(); i++) {
         double temp = logf(g(i)); // Applying logfunc to i-th element of the combination of x and theta.
-        int y = int(_y(i)); // Getting i-th y var.
-        loglik += (y * log(temp)) + ((1 - y) * log(1 - temp));
+        loglik += (_y(i) * log(temp)) + ((1 - _y(i)) * log(1 - temp));
     }
 
     return loglik;
 }
 
 colvec LogLik::logLik_d(const colvec &theta) {
-    return colvec();
+    // The gradient (i.e., first dev.) of the log lik function w/ respect to thetas
+    dlib::matrix<double> g(_x.nr(), 1);
+    colvec d;
+    // d l(theta)/d theta_j = sum(i = 0 -> n) { (y[i] - f(theta, x))x_j[i]
+
+    // THIS MAY NEED OPTIMIZATION
+    g = _x * dlib::trans(theta); // Linear combination of x and theta
+    for (int j = 0; j < theta.nc(); j++) {
+        d(j) = 0;
+        for (int i = 0; i < g.nr(); i++) {
+            double temp = logf(g(i)); // Applying logfunc to i-th element of the combination of x and theta.
+            d(j) += (_y(i) - temp) * _x(i, j);
+        }
+    }
+
+    std::cout << d << std::endl;
+    return d;
 }
