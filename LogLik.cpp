@@ -5,49 +5,58 @@
 #include <dlib/matrix.h>
 #include "LogLik.h"
 
-double logf(const double &z) {
-    // Returns the logistic function at z; 1 / (1 + e**(-z))
-    return 1 / (1 + exp(-z));
+LogLik::LogLik(const dlib::matrix<double>& x, const dlib::matrix<double>& y) {
+    // Resize matrices after checking they're legal (n of x == n of y)
+    if (x.nc() != y.nc()) throw std::bad_function_call();
+
+    _x = x; // k * n
+    _y = y; // 1 * n
+}
+
+double p(const colvec &x_i, const colvec &theta) {
+    // The logistic function for one observation
+    // p(x; theta) = 1 / (1 + -exp(theta[0] + x * theta[1:k])
+    double t0 = theta(0);
+    double lc = dlib::dot(x_i, dlib::subm(theta, dlib::range(1, theta.nr()), dlib::range(0, 0)));
+    return 1 / (1 + exp(-1 * (t0 + lc)));
 }
 
 double LogLik::logLik(const colvec &theta) {
-    // The log likelihood of theta given the data for the logistic regression model
+    // Theta length has to be equal to the number of variables + 1 (the intercept)
+    if (theta.nr() != (_x.nr() + 1)) { throw std::bad_function_call(); }
 
-    dlib::matrix<double> g(_x.nr(), 1);
-    double loglik = 0;
-
-    // FOR ONE DATA POINT
-    // Pr(Y = y|X = x) = f(theta, x)**y * [1 - f(theta, x)]**(1 - y)
-    // f(theta; x) = 1 / (1 + e**(-g(theta; x))
-    // g(theta; x) = sum(i = 0 -> k) { x[i]theta[i] } = x * theta' (where x[1, k] and theta[1, k])
-
-    // l(theta) = (i = 0 -> N) { y[i]ln(f(theta;x[i])) * [1 - f(theta; x[i])]*ln(1 - f(theta; x[i]))
-
-    g = _x * dlib::trans(theta); // Linear combination of x and theta
-    for (int i = 0; i < g.nr(); i++) {
-        double temp = logf(g(i)); // Applying logfunc to i-th element of the combination of x and theta.
-        loglik += (_y(i) * log(temp)) + ((1 - _y(i)) * log(1 - temp));
+    // LogLik = sum[i -> n] { y[i] ln(p(x[i], theta)) + (1 - y)ln(1-p(x[i], theta))
+    double ll = 0;
+    for (int i = 0; i < _x.nc(); i++) {
+        colvec x_i = dlib::colm(_x, i);
+        double p_i = p(x_i, theta);
+        ll += (_y(i) * log(p_i)) + ((1 - _y(i)) * (log(1 - p_i)));
     }
 
-    return loglik;
+    return ll;
 }
 
 colvec LogLik::logLik_d(const colvec &theta) {
-    // The gradient (i.e., first dev.) of the log lik function w/ respect to thetas
-    dlib::matrix<double> g(_x.nr(), 1);
-    colvec d;
-    // d l(theta)/d theta_j = sum(i = 0 -> n) { (y[i] - f(theta, x))x_j[i]
+    // Theta length has to be equal to the number of variables + 1 (the intercept)
+    if (theta.nr() != (_x.nr() + 1)) { throw std::bad_function_call(); }
+    colvec r(theta.nr(), 1);
+    std::vector<double> dt;
 
-    // THIS MAY NEED OPTIMIZATION
-    g = _x * dlib::trans(theta); // Linear combination of x and theta
-    for (int j = 0; j < theta.nc(); j++) {
-        d(j) = 0;
-        for (int i = 0; i < g.nr(); i++) {
-            double temp = logf(g(i)); // Applying logfunc to i-th element of the combination of x and theta.
-            d(j) += (_y(i) - temp) * _x(i, j);
+    // d(l) / d(theta_j) = sum[i -> n] { (y_i - p(x[i]))x[i,j]
+    for (int j = 0; j < theta.nr(); j++) {
+        double d = 0;
+        for (int i = 0; i < _x.nc(); i++) {
+            colvec x_i = dlib::colm(_x, i);
+            double p_i = p(x_i, theta);
+            if (j == 0) {
+                d += (_y(i) - p_i);
+            } else {
+                d += (_y(i) - p_i) * x_i(j - 1);
+            }
         }
+        dt.push_back(d);
     }
 
-    std::cout << d << std::endl;
-    return d;
+    r = dlib::mat(dt);
+    return(r);
 }
