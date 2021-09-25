@@ -22,7 +22,7 @@ void cartProduct(std::set<int> const &n, std::set<float> const &b1, Iterator out
         for (float j: b1) {
             CellParam temp;
             temp.n = i;
-            temp.b1 = j;
+            temp.testFloat = j;
             *out++ = temp;
         }
     }
@@ -60,13 +60,13 @@ std::set<T> parse_params(std::string str, int range) { // Here
     return std::set<T>(entry.begin(), entry.end());
 }
 
-/* int main() {
+int main() {
     std::set<int> n;
-    std::set<float> b1;
-    std::string entSizes, entBOne;
+    std::set<float> testFloat;
+    std::string entSizes, entFloat;
 
     std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-    std::cout << "Welcome to KD's Simulation of Logistic Regression!" << std::endl;
+    std::cout << "Welcome to KD's Simulation of Linear Regression!" << std::endl;
 
     // Ask whether parameters should be acquired, or if this is a test run.
     char entry;
@@ -77,18 +77,18 @@ std::set<T> parse_params(std::string str, int range) { // Here
 
     if (entry == 'y') {
         std::cout << "Skipping input steps..." << std::endl;
-        n = {10};
-        b1 = {1};
+        n = {5, 10};
+        testFloat = {1, 2};
     } else {
         // Asking and processing simulation parameters
         std::cout << "Please enter the following parameters separated by commas:" << std::endl;
         std::cout << "Sample Sizes (Must be larger than zero): ";
         getline(std::cin, entSizes);
-        std::cout << "Beta 1 (First Parameter): ";
-        getline(std::cin, entBOne);
+        std::cout << "Test Parameter of Floats: ";
+        std::getline(std::cin, entFloat);
         try {
             n = parse_params<int>(entSizes, 1);
-            b1 = parse_params<float>(entBOne, -1);
+            testFloat = parse_params<float>(entFloat, -1);
         }
         catch (std::invalid_argument &e) {
             std::cout << "Error in parsing your arguments: "
@@ -112,6 +112,7 @@ std::set<T> parse_params(std::string str, int range) { // Here
     timeInfo = localtime(&rawTime);
 
     // Ask whether random should be seeded (for testing!)
+    // TODO: Rework this function to use the GSL random generator
     do {
         std::cout << "Would you like to seed random? [y/n]: ";
         std::cin >> entry;
@@ -140,8 +141,8 @@ std::set<T> parse_params(std::string str, int range) { // Here
     std::cout << "~~~~~~~~~~~~~~~~~~~~ Confirm? ~~~~~~~~~~~~~~~~~~~~" << std::endl;
     std::cout << "N: ";
     printSet<int>(n);
-    std::cout << "\nB1: ";
-    printSet<float>(b1);
+    std::cout << "\nTest Float: ";
+    printSet<float>(testFloat);
 
     do {
         std::cout << "\n[y/n]: ";
@@ -150,7 +151,7 @@ std::set<T> parse_params(std::string str, int range) { // Here
     if (entry == 'n') exit(EXIT_SUCCESS);
 
     std::vector<CellParam> allCells;
-    cartProduct(n, b1, back_inserter(allCells));
+    cartProduct(n, testFloat, back_inserter(allCells));
 
     SimCell *currCell;
     for (auto i : allCells) {
@@ -165,4 +166,4 @@ std::set<T> parse_params(std::string str, int range) { // Here
     }
 
     return 0;
-} */
+}
