@@ -11,6 +11,7 @@
 #include <ctime>
 #include <set>
 #include <tuple>
+#include <gsl/gsl_rng.h>
 
 #include "SimCell.h"
 
@@ -75,6 +76,7 @@ int main() {
         std::cin >> entry;
     } while (!std::cin.fail() && entry != 'y' && entry != 'n');
 
+
     if (entry == 'y') {
         std::cout << "Skipping input steps..." << std::endl;
         n = {5, 10};
@@ -83,6 +85,7 @@ int main() {
         // Asking and processing simulation parameters
         std::cout << "Please enter the following parameters separated by commas:" << std::endl;
         std::cout << "Sample Sizes (Must be larger than zero): ";
+        std::cin.ignore();
         getline(std::cin, entSizes);
         std::cout << "Test Parameter of Floats: ";
         std::getline(std::cin, entFloat);
@@ -111,13 +114,16 @@ int main() {
     time(&rawTime);
     timeInfo = localtime(&rawTime);
 
-    // Ask whether random should be seeded (for testing!)
-    // TODO: Rework this function to use the GSL random generator
+    // Prepare random and ask for seeding (for testing!)
+    gsl_rng_env_setup();
+    const gsl_rng_type *T = gsl_rng_default;
+    gsl_rng *r = gsl_rng_alloc(T);
+
     do {
         std::cout << "Would you like to seed random? [y/n]: ";
         std::cin >> entry;
     } while (!std::cin.fail() && entry != 'y' && entry != 'n');
-    (entry == 'y') ? srand(69) : srand(time(&rawTime));
+    if (entry == 'y')  gsl_rng_set(r, 69);
 
     //File IO object
     do {
@@ -156,7 +162,7 @@ int main() {
     SimCell *currCell;
     for (auto i : allCells) {
         try {
-            currCell = new SimCell(i, fName);
+            currCell = new SimCell(i, r, fName);
             currCell->run();
         }
         catch (std::bad_function_call &e) {

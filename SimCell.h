@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <gsl/gsl_rng.h>
 
 #pragma once
 
@@ -15,13 +16,13 @@ struct CellParam {
 
 class SimCell {
 private:
-    // TODO: Add random number generator object.
-    const int _REP = 10;
+    const int _REP = 1;
     const int _K = 2;
+    gsl_rng *_r;
     std::string _fileName;
     int _n;
     float _testFloat;
 public:
-    SimCell(CellParam p, std::string fileName);
+    SimCell(CellParam p, gsl_rng *r, std::string fileName);
     void run() const;
 };
