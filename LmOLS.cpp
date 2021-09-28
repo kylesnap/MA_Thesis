@@ -16,8 +16,8 @@ LmOLS::LmOLS(const gsl_matrix *X, const gsl_vector *y) {
     _vCov = gsl_matrix_calloc(X->size2, X->size2); // k * k (Needs to be zeroed to prepare for triangular matrix)
 
     // Get the inverse of X'X and store it in _vCov (later, we'll scale _vCov to e'e/n-k to get the true vCov matrix)
-    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, X, 0.0, _vCov); // _vCov = (X' X) (Only lower dig)
-    // If X is invertible (e.g. X is full rank), then the matrix X'X is positive-definite (Can use cholesky)
+    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, X, 0.0, _vCov); // _vCov = (X' X) (lower dig.)
+    // If X is invertible (i.e. X is full rank), then the matrix X'X is positive-definite (Can use cholesky)
     gsl_linalg_cholesky_decomp1(_vCov);
     gsl_linalg_cholesky_invert(_vCov); // XtX = (X'X)^-1
 
@@ -37,16 +37,61 @@ LmOLS::LmOLS(const gsl_matrix *X, const gsl_vector *y) {
     //VcoV matrix calculation
     gsl_matrix_scale(_vCov, (_ssr / (double)(X->size1 - X->size2))); // _vCov = SSR / (n - k) * (X'X)^-1
 
-    for (int k = 0; k < _betaHat->size; k++) {
+    for (int k = 0; k < _vCov->size1; k++) {
         printf("[%f]\n",
-               gsl_vector_get(_betaHat, k)
+               gsl_matrix_get(_vCov, k, k)
         );
     }
-
+/*
     for (int i = 0; i < _betaHat->size; i++) {
         printf("[%f, %f, %f]\n",
                gsl_matrix_get(_vCov, i, 0), gsl_matrix_get(_vCov, i, 1), gsl_matrix_get(_vCov, i, 2)
         );
     }
     //TODO: Test constructor with "handwritten" case.
+*/
+}
+
+void LmOLS::getBetaHat(std::vector<double> &v) {
+    // Pushes the betahat vector onto std::vector v
+    for (int i = 0; i < _betaHat->size; i++) {
+        v.push_back(gsl_vector_get(_betaHat, i));
+    }
+}
+
+void LmOLS::getBetaHat(std::string &s) {
+    // Appends a comma separated string of beta hats (0, 1, 2) to string s
+    if (_betaHat->size != 3) {
+        std::cerr << "String method improper length: Beta";
+        return;
+    }
+    char b[64];
+    sprintf(b, "%f,%f,%f",
+            gsl_vector_get(_betaHat, 0),
+            gsl_vector_get(_betaHat, 1),
+            gsl_vector_get(_betaHat, 2)
+            );
+    s.append(b);
+}
+
+void LmOLS::getBetaSE(std::vector<double> &v) {
+    // Pushes the std errs of the beta coef (i.e. the squared diag. of vCov) to v.
+    for (int i = 0; i < _vCov->size1; i++) {
+        v.push_back(sqrt(gsl_matrix_get(_vCov, i, i)));
+    }
+}
+
+void LmOLS::getBetaSE(std::string &s) {
+    // Appends a comma separated string of beta ses (0, 1, 2) to string s
+    if (_vCov->size1 != 3) {
+        std::cerr << "String method improper length: Beta SE";
+        return;
+    }
+    char b[64];
+    sprintf(b, "%f,%f,%f",
+            sqrt(gsl_matrix_get(_vCov, 0, 0)),
+            sqrt(gsl_matrix_get(_vCov, 1, 1)),
+            sqrt(gsl_matrix_get(_vCov, 2, 2))
+    );
+    s.append(b);
 }
