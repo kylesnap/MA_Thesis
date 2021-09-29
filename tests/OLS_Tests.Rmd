@@ -1,0 +1,101 @@
+---
+title: "MA Thesis Code Checks"
+author: "Kyle Dewsnap"
+date: "28/09/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+As the algorithm that implements the OLS estimator is manually coded, it is wise to check the output of this algorithm against both a worked example and against other, audited statistics software/
+
+## Worked Example
+
+Let:
+
+- $X$ be an $n * k$ design matrix, where $n$ is the number of observations and $k$ is the number of predictor variables _plus_ one intercept term (the leftmost column of $X$ is filled with ones);
+- $\beta$ be a vector of length $k$ representing the true model parameters, and $\hat{\beta}$ be its estimates,
+- $\epsilon$ be a vector of length $n$ representing the error terms of the observations, where $e ~ N(0, 1)$.
+- $y$ be a vector of length $n$ representing the actual values of the response variable, and $\hat(y)$ be its estimates from the model.
+
+For this example, we set $n = 4$ and $k = 3$ (namely, we have two predictor variables, $X_1$ and $X_2$). Both predictor variables follow a random distribution: $X_1 ~ N(0, 1), X_2 ~ N(1, 1)$.
+$$
+X = \left(\begin{array}{ccc}
+1 & 0.7 & 2.0 \\
+1 & -1.0 & 0.4 \\
+1 & 0.7 & 1.5 \\
+1 & 0.6 & 0.3 \end{array}\right)\
+$$
+The true model used to generate the response variable is
+$$
+\begin{equation}
+\begin{split}
+Y & = X\beta + \epsilon \\
+& = X \left(\begin{array}{c}0.5 \\ 1 \\ -0.5 \end{array}\right)\ + \left(\begin{array}{c}0.2 \\ 1.8 \\ -1.1 \\ 0.0 \end{array}\right)\ \\
+& = \left(\begin{array}{c}0.4 \\ 1.1 \\ -0.6 \\ 1.0 \end{array}\right)\
+\end{split}
+\end{equation}
+$$
+The OLS estimator of $\beta$ is $\hat{\beta} = (X'X)^{-1}X'y$, where $'$ is the transpose operator. Given our data, the parameter estimates of this model are:
+$$
+\begin{equation}
+\begin{split}
+\hat{\beta} & = (X'X)^{-1}X'y \\
+ & = \left(\begin{array}{ccc}
+4.00	& 1.00 &	4.20 \\
+1.00 &	2.34 & 2.23 \\
+4.20 & 2.23 & 6.50 \end{array}\right)^{-1}
+\left(\begin{array}{cccc}
+1 & 1 & 1 & 1 \\
+0.7 & -1 & 0.7 & 0.6 \\
+2 & 0.4 & 1.5 & 0.3 \end{array}\right)
+\left(\begin{array}{c}0.4 \\ 1.1 \\ -0.6 \\ 1.0 \end{array}\right)\ \\
+ & = \left(\begin{array}{ccc}
+0.860 & 0.241 & -0.638 \\
+0.241 & 0.702 & -0.397 \\
+-0.638 & -0.397 & -0.702
+ \end{array}\right)
+ \left(\begin{array}{c}1.90 \\ -0.64 \\ 0.64 \end{array}\right)\ \\
+ & = \left(\begin{array}{c}1.071 \\ -0.246 \\ -0.510 \end{array}\right)\
+\end{split}
+\end{equation}
+$$
+This test was passed; see `LmOLS_Test.cpp:26-28'.
+
+The standard errors of $\hat{\beta}$ are given by the squared diagonal of the variance-covariance matrix of the OLS estimates. This is given by
+$E[(\hat{\beta} - \beta)(\hat{\beta} - \beta)'] = \sigma^2(X'X)^(-1)$, where $sigma = \frac{SSR}{n - k}$. Given our data, the standard errors of the parameter estimates of this model are:
+$$
+\begin{equation}
+\begin{split}
+\sigma & = \frac{RSS}{n - k} \\
+ & = \frac{\sum_{i=0}^n\hat{y}_i-y_i}{n-k} \\
+ & = \frac{0.863}{4-3} \\
+ & = 0.863 \\
+E[(\hat{\beta} - \beta)(\hat{\beta} - \beta)'] & = \sigma^2(X'X)^(-1) \\
+ & = 0.863^2 \left(\begin{array}{ccc}
+0.860 & 0.241 & -0.638 \\
+0.241 & 0.702 & -0.397 \\
+-0.638 & -0.397 & -0.702 \end{array}\right) \\
+ & = \left(\begin{matrix}
+0.640 & 0.179 & -0.475 \\
+0.179 & 0.523 & -0.295 \\
+-0.475 & -0.295 & 0.523 \end{matrix}\right) \\
+SE(\hat{\beta}) & = \left(\begin{array}{c} \sqrt{0.640} \\ \sqrt{0.523} \\ \sqrt{0.523} \end{array}\right) \\
+ & = \left(\begin{array}{c}0.800 \\ 0.723 \\ 0.723 \end{array}\right)
+\end{split}
+\end{equation}
+$$
+This test was passed; see `LmOLS_Test.cpp:31-34`.
+
+The coefficient of determination of the model is given by $R^2 = 1 - \frac{SSR}{SST}$. Given our data, the coefficient of determination is:
+$$
+\begin{equation}
+\begin{split}
+R^2 & = 1 - \frac{SSR}{SST} \\
+ & = 1 - \frac{0.863}{1.828} \\
+ & = 0.528
+\end{split}
+\end{equation}
+$$
+This test was passed; see `LmOLS_Test.cpp:36`.

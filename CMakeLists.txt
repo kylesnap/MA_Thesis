@@ -10,5 +10,5 @@ else()
     message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
 endif()
 
-add_executable(MA_Thesis main.cpp SimCell.cpp SimCell.h LmOLS.cpp LmOLS.h)
+add_executable(MA_Thesis main.cpp SimCell.cpp SimCell.h LmOLS.cpp LmOLS.h tests/LmOLS_Test.cpp)
 target_link_libraries(MA_Thesis ${CONAN_LIBS})

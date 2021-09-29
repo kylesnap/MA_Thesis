@@ -60,21 +60,19 @@ void SimCell::run() const {
     gsl_vector_set_all(beta, 1);
 
     LmOLS *mod;
+    std::string ln;
     for (int i = 0; i < _REP; i++) {
         set_e(y, _r); // Error terms are first held in y
         gsl_blas_dgemv(CblasNoTrans, 1.0, X, beta, 1.0, y); // y = (X * Beta) + y
         mod = new LmOLS(X, y);
-        // TODO: Print methods
     }
 
-    for (int i = 0; i < X->size1; i++) {
-        printf("%f %f %f\n",
-               gsl_matrix_get(X, i, 0),
-               gsl_matrix_get(X, i, 1),
-               gsl_matrix_get(X, i, 2)
+    /* for (int i = 0; i < X->size1; i++) {
+        printf("%f\n",
+               gsl_matrix_get(X, i, i)
         );
     }
-    gsl_vector_fprintf(stdout, y, "%f");
+    gsl_vector_fprintf(stdout, y, "%f"); */
 
 /*
     // Opens a buffer!

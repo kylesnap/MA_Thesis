@@ -15,6 +15,11 @@
 
 #include "SimCell.h"
 
+#define CATCH_CONFIG_RUNNER
+#include "tests/catch.hpp"
+
+#define TEST true
+
 template<typename Iterator>
 void cartProduct(std::set<int> const &n, std::set<float> const &b1, Iterator out) {
     // Good, ol' fashioned nested for loops like your mom used to make (input: several vectors and an iterator
@@ -62,6 +67,7 @@ std::set<T> parse_params(std::string str, int range) { // Here
 }
 
 int main() {
+
     std::set<int> n;
     std::set<float> testFloat;
     std::string entSizes, entFloat;
@@ -69,10 +75,15 @@ int main() {
     std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
     std::cout << "Welcome to KD's Simulation of Linear Regression!" << std::endl;
 
+    // This macro will run tests if called from Catch.hpp (Macro set earlier)
+    if (TEST) {
+        return Catch::Session().run();
+    }
+
     // Ask whether parameters should be acquired, or if this is a test run.
     char entry;
     do {
-        std::cout << "Is this a test? (i.e., use dummy parameters) [y/n]: ";
+        std::cout << "Use dummy parameters? [y/n]: ";
         std::cin >> entry;
     } while (!std::cin.fail() && entry != 'y' && entry != 'n');
 

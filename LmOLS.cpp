@@ -6,6 +6,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_linalg.h>
+#include <gsl/gsl_statistics_double.h>
 
 #include "LmOLS.h"
 
@@ -34,22 +35,13 @@ LmOLS::LmOLS(const gsl_matrix *X, const gsl_vector *y) {
     _ssr = pow(gsl_blas_dnrm2(e), 2); // = sqrt(sum(e^2))^2 = sum(e^2)
     gsl_vector_free(e);
 
-    //VcoV matrix calculation
-    gsl_matrix_scale(_vCov, (_ssr / (double)(X->size1 - X->size2))); // _vCov = SSR / (n - k) * (X'X)^-1
+    // Find RSQ = 1 - (SSR/SST)
+    double sst = gsl_stats_tss(y->data, y->stride, y->size);
+    _rsq = 1 - (_ssr/sst);
 
-    for (int k = 0; k < _vCov->size1; k++) {
-        printf("[%f]\n",
-               gsl_matrix_get(_vCov, k, k)
-        );
-    }
-/*
-    for (int i = 0; i < _betaHat->size; i++) {
-        printf("[%f, %f, %f]\n",
-               gsl_matrix_get(_vCov, i, 0), gsl_matrix_get(_vCov, i, 1), gsl_matrix_get(_vCov, i, 2)
-        );
-    }
+    // VcoV matrix calculation _vCov = (SSR / (n - k))^2 * (X'X)^-1
+    gsl_matrix_scale(_vCov, pow((_ssr / (double)(X->size1 - X->size2)), 2));
     //TODO: Test constructor with "handwritten" case.
-*/
 }
 
 void LmOLS::getBetaHat(std::vector<double> &v) {
@@ -94,4 +86,8 @@ void LmOLS::getBetaSE(std::string &s) {
             sqrt(gsl_matrix_get(_vCov, 2, 2))
     );
     s.append(b);
+}
+
+double LmOLS::getRSQ() {
+    return _rsq;
 }

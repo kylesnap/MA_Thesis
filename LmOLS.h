@@ -16,6 +16,7 @@ private:
     gsl_vector * _betaHat;
     gsl_matrix * _vCov;
     double _ssr;
+    double _rsq;
 public:
     LmOLS(const gsl_matrix *X, const gsl_vector *Y);
 
@@ -24,4 +25,6 @@ public:
 
     void getBetaSE(std::vector<double> &v);
     void getBetaSE(std::string &s);
+
+    double getRSQ();
 };
