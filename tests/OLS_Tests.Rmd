@@ -1,14 +1,20 @@
 ---
 title: "MA Thesis Code Checks"
 author: "Kyle Dewsnap"
-date: "28/09/2021"
-output: html_document
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+fontsize: 12pt
+geometry: margin=1in
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
+
 As the algorithm that implements the OLS estimator is manually coded, it is wise to check the output of this algorithm against both a worked example and against other, audited statistics software.
 
 ## Validation against Worked Example
@@ -69,21 +75,21 @@ $E[(\hat{\beta} - \beta)(\hat{\beta} - \beta)'] = \hat{\sigma^2}(X'X)^(-1)$, whe
 $$
 \begin{equation}
 \begin{split}
-\hat{\sigma} & = \frac{RSS}{n - k} \\
+\hat{\sigma}^2 & = \frac{RSS}{n - k} \\
  & = \frac{\sum_{i=0}^n\hat{y}_i-y_i}{n-k} \\
- & = \frac{0.863}{4-3} \\
- & = 0.863 \\
+ & = \frac{0.862}{4-3} \\
+ & = 0.862 \\
 E[(\hat{\beta} - \beta)(\hat{\beta} - \beta)'] & = \hat{\sigma^2}(X'X)^(-1) \\
- & = 0.863^2 \left(\begin{array}{ccc}
+ & = 0.863 \left(\begin{array}{ccc}
 0.860 & 0.241 & -0.638 \\
 0.241 & 0.702 & -0.397 \\
 -0.638 & -0.397 & -0.702 \end{array}\right) \\
  & = \left(\begin{matrix}
-0.640 & 0.179 & -0.475 \\
-0.179 & 0.523 & -0.295 \\
--0.475 & -0.295 & 0.523 \end{matrix}\right) \\
-SE(\hat{\beta}) & = \left(\begin{array}{c} \sqrt{0.640} \\ \sqrt{0.523} \\ \sqrt{0.523} \end{array}\right) \\
- & = \left(\begin{array}{c}0.800 \\ 0.723 \\ 0.723 \end{array}\right)
+0.742 & 0.208 & -0.551 \\
+0.208 & 0.606 & -0.342 \\
+-0.551 & -0.342 & 0.606 \end{matrix}\right) \\
+SE(\hat{\beta}) & = \left(\begin{array}{c} \sqrt{0.742} \\ \sqrt{0.606} \\ \sqrt{0.606} \end{array}\right) \\
+ & = \left(\begin{array}{c}0.861 \\ 0.778 \\ 0.778 \end{array}\right)
 \end{split}
 \end{equation}
 $$
@@ -123,6 +129,4 @@ head(test_df)
 
 r_mod <- lm(GPG ~ WT + HP_WT, data = test_df)
 ```
-The estimates and the coefficient of determinations for this model are identical between the C++ implementation (see `LmOLS_Test.cpp:105-118`), the R implementation of linear model fitting, and the original paper. 
-
-We note, however, that the standard errors of the estimates from the C++ implementation are smaller than the estimates provided by R and the paper. This is because both R and the paper used maximum likelihood estimation (in the form of the iterative reweighed least squares) to estimate the model's parameters. While we expect the estimates produced by MLE and OLS to be identical (recall that the ML estimator for the parameters of a linear model and OLS are identical), we also expect that the standard errors of the estimates will be smaller from OLS than from MLE due to the Gauss-Markov theorem (specifically, MLE estimates of $\sigma^2$ are biased with small sample sizes, whereas the estimates produced by OLS are not).
+The estimates, SEs of the coefficients, and the coefficient of determination for this model are identical between the C++ implementation (see `LmOLS_Test.cpp:105-123`), the R implementation of linear model fitting, and the original paper. 

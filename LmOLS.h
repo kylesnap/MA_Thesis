@@ -14,7 +14,7 @@
 class LmOLS {
 private:
     gsl_vector * _betaHat;
-    gsl_matrix * _vCov;
+    gsl_vector * _betaSE;
     double _ssr;
     double _rsq;
 public:
