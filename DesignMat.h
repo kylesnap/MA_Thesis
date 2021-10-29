@@ -15,6 +15,11 @@
 
 # pragma once
 
+struct BetaP {
+    float mode;
+    float conc;
+};
+
 class DesignMat {
 private:
     int _TK = 4; // Number of params in true model (B0, B1, BQ, BX)
@@ -24,11 +29,15 @@ private:
     std::vector<char>_grps;
     gsl_rng *_r;
     int _n;
+    BetaP _bP;
+    BetaP _bQ;
     float _pP;
     float _pQ;
 public:
-    DesignMat(int n, gsl_rng *r, float pP, float pQ);
+    DesignMat(int n, BetaP bP, BetaP bQ, gsl_rng *r, float pP, float pQ);
 
-    std::map<char, int> tally_grps();
+    std::map<char, int> tallyGrps();
     std::vector<double> summary(bool head = false);
+
+    int fillResponses(gsl_matrix *eX);
 };

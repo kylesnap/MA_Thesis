@@ -4,7 +4,18 @@
 
 #include "DesignMat.h"
 
-DesignMat::DesignMat(int n, gsl_rng *r, float pP, float pQ) {
+double genRandBeta(gsl_rng *r, BetaP param) { // VERIFIED
+    // Generates a random double from the Beta distribution with mode and concentration.
+    if (param.mode == 0) { // Extreme cases.
+        return 0;
+    } else if (param.mode == 1) {
+        return 1;
+    }
+    float a = param.mode * (param.conc - 2) + 1;
+    return gsl_ran_beta(r, a, param.conc - a);
+}
+
+DesignMat::DesignMat(int n, BetaP bP, BetaP bQ, gsl_rng *r, float pP, float pQ) {
     // Assigns groups to respondents and builds true design mat.
 
     // Basic error checking.
@@ -17,6 +28,15 @@ DesignMat::DesignMat(int n, gsl_rng *r, float pP, float pQ) {
     _n = n;
     _pP = pP;
     _pQ = pQ;
+
+    if (((bP.mode - 1) * bP.mode > 0) || ((bQ.mode - 1) * bQ.mode > 0)) {
+        throw std::out_of_range("Mode of bP or bQ is outside a possible range [0, 1].");
+    }
+    if (bP.conc < 2 || bQ.conc < 2) {
+        throw std::out_of_range("Concentration of bP or bQ is smaller than 2.");
+    }
+    _bP = bP;
+    _bQ = bQ;
 
     _r = r;
 
@@ -31,7 +51,7 @@ DesignMat::DesignMat(int n, gsl_rng *r, float pP, float pQ) {
     }
     std::shuffle(_grps.begin(), _grps.end(), std::default_random_engine(gsl_rng_get(_r)));
 
-    tally_grps(); // Currently, this will just check for errors.
+    tallyGrps(); // Currently, this will just check for errors.
 
     // Build true X // VERIFIED
     _tX = gsl_matrix_calloc(_n, _TK);
@@ -60,7 +80,7 @@ DesignMat::DesignMat(int n, gsl_rng *r, float pP, float pQ) {
 
 }
 
-std::map<char, int> DesignMat::tally_grps() { // Verified
+std::map<char, int> DesignMat::tallyGrps() { // Verified
     // Makes a tally of the number of group members
     int nP = 0, nQ = 0, nX = 0;
     for (char i : _grps) {
@@ -106,4 +126,51 @@ std::vector<double> DesignMat::summary(bool head) { // TESTED!
         }
     }
     return {mean, var, q, x};
+}
+
+int DesignMat::fillResponses(gsl_matrix *eX) {
+   // Takes in an empty design matrix, then copies tX data into it; however, column = 2 is binary responses to survey q.
+   // Returns number of satisficiers.
+   int ns = 0;
+   if ((eX->size1 != _tX->size1) || (eX->size2 != _MK)) throw std::length_error("Dimension mismatch.");
+
+   // Copy first two cols
+   gsl_vector_view subeX = gsl_matrix_column(eX, 0);
+   gsl_vector_view subtX = gsl_matrix_column(_tX, 0);
+   gsl_vector_memcpy(&subeX.vector, &subtX.vector);
+
+   subeX = gsl_matrix_column(eX, 1);
+   subtX = gsl_matrix_column(_tX, 1);
+   gsl_vector_memcpy(&subeX.vector, &subtX.vector);
+
+   // Fill third col (which represents Qs) with responses VERIFIED
+   gsl_vector_view tGrpI;
+   subeX = gsl_matrix_column(eX, 2);
+   bool si, is_q;
+   for (int i = 0; i < _n; i++) {
+       tGrpI = gsl_matrix_subrow(_tX, i, 2, 2);
+       if (gsl_vector_isnull(&tGrpI.vector)) { // i.e., individual i is in group P
+           is_q = false;
+           si = gsl_ran_bernoulli(_r, genRandBeta(_r, _bP));
+           // std::cout << "P " << si << " ";
+       } else if (gsl_vector_max_index(&tGrpI.vector) == 0) { // i.e., i is in Q
+           is_q = true;
+           si = gsl_ran_bernoulli(_r, genRandBeta(_r, _bQ));
+           // std::cout << "Q " << si << " ";
+       } else if (gsl_vector_max_index(&tGrpI.vector) == 1) { // i.e., i is not in P nor Q
+           si = true; // Satificing will ALWAYS happen when option isn't present for respondent.
+           // std::cout << "X " << si << " ";
+       } else { // Something has gone wrong.
+           throw std::bad_function_call();
+       }
+       if (si) {
+           ++ns;
+           is_q = gsl_ran_bernoulli(_r, 0.5); // Bernoulli success == Q, Bernoulli fail == P. HARD SATIFICING.
+       }
+       // std::cout << is_q << std::endl;
+       gsl_vector_set(&subeX.vector, i, is_q);
+   }
+
+   // TODO: Check match between actual X and response X; check that number of reported Qs are expected.
+   return ns;
 }
