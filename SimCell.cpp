@@ -49,6 +49,9 @@ void SimCell::run() const {
     std::streambuf *buf;
     std::ofstream of;
 
+    // Prepare the design matrices for the true and estimated models
+
+
     // Declare matrices, vectors, and intercepts
     gsl_matrix *X = gsl_matrix_alloc(_n, _K + 1); // n * k + 1 (Left most column are constant terms)
 
@@ -66,6 +69,8 @@ void SimCell::run() const {
         gsl_blas_dgemv(CblasNoTrans, 1.0, X, beta, 1.0, y); // y = (X * Beta) + y
         mod = new LmOLS(X, y);
     }
+
+    // TODO: Add string methods to write csv lines to output
 
     /* for (int i = 0; i < X->size1; i++) {
         printf("%f\n",
