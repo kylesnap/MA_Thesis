@@ -20,7 +20,7 @@ DesignMat::DesignMat(int n, int k, gsl_rng *r, float pP, float pQ) {
 
     _r = r;
 
-    // Build list of group memberships.
+    // Build list of group memberships. // VERIFIED
     auto it = _grps.end();
     _grps.insert(it, ceil((float) _n * _pP), 'P');
     it = _grps.end();
@@ -31,12 +31,10 @@ DesignMat::DesignMat(int n, int k, gsl_rng *r, float pP, float pQ) {
     }
     std::shuffle(_grps.begin(), _grps.end(), std::default_random_engine(gsl_rng_get(_r)));
 
-
     tally_grps(); // Currently, this will just check for errors.
-    // TODO: Test conditions to generate proper number of group members.
 }
 
-std::map<char, int> DesignMat::tally_grps() {
+std::map<char, int> DesignMat::tally_grps() { // Verified
     // Makes a tally of the number of group members
     int nP = 0, nQ = 0, nX = 0;
     for (char i : _grps) {
