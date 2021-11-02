@@ -15,9 +15,20 @@
 
 # pragma once
 
-struct BetaP {
-    float mode;
-    float conc;
+class BetaGen {
+private:
+    float _mode;
+    float _conc;
+    gsl_rng *_r;
+
+    int _bh = 0;
+    float _a = 0;
+    float _b = 0;
+public:
+    BetaGen(float mode, float conc, gsl_rng *r);
+
+    double betaR();
+    bool betaBernR();
 };
 
 class DesignMat {
@@ -29,15 +40,17 @@ private:
     std::vector<char>_grps;
     gsl_rng *_r;
     int _n;
-    BetaP _bP;
-    BetaP _bQ;
+    BetaGen *_bP;
+    BetaGen *_bQ;
     float _pP;
     float _pQ;
 public:
-    DesignMat(int n, BetaP bP, BetaP bQ, gsl_rng *r, float pP, float pQ);
+    DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, float pQ);
 
     std::map<char, int> tallyGrps();
     std::vector<double> summary(bool head = false);
 
     int fillResponses(gsl_matrix *eX);
+
+    gsl_matrix *getTrueX();
 };

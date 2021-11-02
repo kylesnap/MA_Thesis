@@ -4,18 +4,7 @@
 
 #include "DesignMat.h"
 
-double genRandBeta(gsl_rng *r, BetaP param) { // VERIFIED
-    // Generates a random double from the Beta distribution with mode and concentration.
-    if (param.mode == 0) { // Extreme cases.
-        return 0;
-    } else if (param.mode == 1) {
-        return 1;
-    }
-    float a = param.mode * (param.conc - 2) + 1;
-    return gsl_ran_beta(r, a, param.conc - a);
-}
-
-DesignMat::DesignMat(int n, BetaP bP, BetaP bQ, gsl_rng *r, float pP, float pQ) {
+DesignMat::DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, float pQ) {
     // Assigns groups to respondents and builds true design mat.
 
     // Basic error checking.
@@ -29,15 +18,8 @@ DesignMat::DesignMat(int n, BetaP bP, BetaP bQ, gsl_rng *r, float pP, float pQ) 
     _pP = pP;
     _pQ = pQ;
 
-    if (((bP.mode - 1) * bP.mode > 0) || ((bQ.mode - 1) * bQ.mode > 0)) {
-        throw std::out_of_range("Mode of bP or bQ is outside a possible range [0, 1].");
-    }
-    if (bP.conc < 2 || bQ.conc < 2) {
-        throw std::out_of_range("Concentration of bP or bQ is smaller than 2.");
-    }
     _bP = bP;
     _bQ = bQ;
-
     _r = r;
 
     // Build list of group memberships. // VERIFIED
@@ -128,6 +110,10 @@ std::vector<double> DesignMat::summary(bool head) { // TESTED!
     return {mean, var, q, x};
 }
 
+gsl_matrix*  DesignMat::getTrueX() {
+    return _tX;
+}
+
 int DesignMat::fillResponses(gsl_matrix *eX) {
    // Takes in an empty design matrix, then copies tX data into it; however, column = 2 is binary responses to survey q.
    // Returns number of satisficiers.
@@ -143,6 +129,7 @@ int DesignMat::fillResponses(gsl_matrix *eX) {
    subtX = gsl_matrix_column(_tX, 1);
    gsl_vector_memcpy(&subeX.vector, &subtX.vector);
 
+/*
    // Fill third col (which represents Qs) with responses VERIFIED
    gsl_vector_view tGrpI;
    subeX = gsl_matrix_column(eX, 2);
@@ -170,7 +157,36 @@ int DesignMat::fillResponses(gsl_matrix *eX) {
        // std::cout << is_q << std::endl;
        gsl_vector_set(&subeX.vector, i, is_q);
    }
+*/
 
    // TODO: Check match between actual X and response X; check that number of reported Qs are expected.
    return ns;
+}
+
+BetaGen::BetaGen(float mode, float conc, gsl_rng *r) { // VALIDATED
+    if (conc < 2) throw std::out_of_range("Concentration below 2.");
+    _r = r;
+    _mode = mode;
+    _conc = conc;
+
+    if (mode < 0) {
+        std::cout << "Mode below zero: All variables generated will have p = 0." << std::endl;
+        _bh = -1;
+        return;
+    } else if (mode > 1) {
+        std::cout << "Mode above one: All variables generated will have p = 1" << std::endl;
+        _bh = 1;
+        return;
+    }
+    _a = _mode * (_conc - 2) + 1;
+    _b = _conc - _a;
+}
+
+double BetaGen::betaR() { // VALIDATED
+    // Return a single double from the beta distribution.
+    return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_beta(_r, _a, _b);
+}
+
+bool BetaGen::betaBernR() { // VALIDATED
+    return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_bernoulli(_r, gsl_ran_beta(_r, _a, _b));
 }
