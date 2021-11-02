@@ -16,8 +16,9 @@ struct CellParam {
 
 class SimCell {
 private:
-    const int _REP = 1;
-    const int _K = 2;
+    const int REP = 1;
+    const int K = 2;
+
     gsl_rng *_r;
     std::string _fileName;
     int _n;

@@ -28,13 +28,13 @@ public:
     BetaGen(float mode, float conc, gsl_rng *r);
 
     double betaR();
-    bool betaBernR();
+    int betaBernR();
 };
 
 class DesignMat {
 private:
-    int _TK = 4; // Number of params in true model (B0, B1, BQ, BX)
-    int _MK = 3; // Number of params in estimated model (B0, B1, BQ)
+    int TK = 4; // Number of params in true model (B0, B1, BQ, BX)
+    int MK = 3; // Number of params in estimated model (B0, B1, BQ)
 
     gsl_matrix *_tX;
     std::vector<char>_grps;

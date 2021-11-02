@@ -53,10 +53,10 @@ void SimCell::run() const {
 
 
     // Declare matrices, vectors, and intercepts
-    gsl_matrix *X = gsl_matrix_alloc(_n, _K + 1); // n * k + 1 (Left most column are constant terms)
+    gsl_matrix *X = gsl_matrix_alloc(_n, K + 1); // n * k + 1 (Left most column are constant terms)
 
     gsl_vector *y = gsl_vector_alloc(_n); // n * 1
-    gsl_vector *beta = gsl_vector_alloc(_K + 1); // k * 1
+    gsl_vector *beta = gsl_vector_alloc(K + 1); // k * 1
 
     // Fill X and beta with initial values
     set_x(X, _r);
@@ -64,7 +64,7 @@ void SimCell::run() const {
 
     LmOLS *mod;
     std::string ln;
-    for (int i = 0; i < _REP; i++) {
+    for (int i = 0; i < REP; i++) {
         set_e(y, _r); // Error terms are first held in y
         gsl_blas_dgemv(CblasNoTrans, 1.0, X, beta, 1.0, y); // y = (X * Beta) + y
         mod = new LmOLS(X, y);

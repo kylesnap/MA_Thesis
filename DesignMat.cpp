@@ -8,7 +8,7 @@ DesignMat::DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, floa
     // Assigns groups to respondents and builds true design mat.
 
     // Basic error checking.
-    if (n <= std::min(_TK, _MK)) throw std::length_error("Too few observations for number of variables.");
+    if (n <= std::min(TK, MK)) throw std::length_error("Too few observations for number of variables.");
     if ((pP - 1) * pP > 0 || (pQ - 1) * pQ > 0) {
         throw std::out_of_range("pP or pQ are outside a possible range [0, 1].");
     } else if (pP + pQ > 1) {
@@ -36,7 +36,7 @@ DesignMat::DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, floa
     tallyGrps(); // Currently, this will just check for errors.
 
     // Build true X // VERIFIED
-    _tX = gsl_matrix_calloc(_n, _TK);
+    _tX = gsl_matrix_calloc(_n, TK);
 
     gsl_vector_view row_i;
     char group_i;
@@ -118,7 +118,7 @@ int DesignMat::fillResponses(gsl_matrix *eX) { // Validated!
    // Takes in an empty design matrix, then copies tX data into it; however, column = 2 is binary responses to survey q.
    // Returns number of satisficiers.
    int ns = 0;
-   if ((eX->size1 != _tX->size1) || (eX->size2 != _MK)) throw std::length_error("Dimension mismatch.");
+   if ((eX->size1 != _tX->size1) || (eX->size2 != MK)) throw std::length_error("Dimension mismatch.");
 
    // Copy first two cols
    gsl_vector_view subeX = gsl_matrix_column(eX, 0);
@@ -190,6 +190,6 @@ double BetaGen::betaR() { // VALIDATED
     return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_beta(_r, _a, _b);
 }
 
-bool BetaGen::betaBernR() { // VALIDATED
-    return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_bernoulli(_r, gsl_ran_beta(_r, _a, _b));
+int BetaGen::betaBernR() { // VALIDATED
+    return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_bernoulli(_r, gsl_ran_beta(_r, _a, _b)); // NOLINT(cppcoreguidelines-narrowing-conversions)
 }
