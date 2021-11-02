@@ -114,7 +114,7 @@ gsl_matrix*  DesignMat::getTrueX() {
     return _tX;
 }
 
-int DesignMat::fillResponses(gsl_matrix *eX) {
+int DesignMat::fillResponses(gsl_matrix *eX) { // Validated!
    // Takes in an empty design matrix, then copies tX data into it; however, column = 2 is binary responses to survey q.
    // Returns number of satisficiers.
    int ns = 0;
@@ -129,37 +129,40 @@ int DesignMat::fillResponses(gsl_matrix *eX) {
    subtX = gsl_matrix_column(_tX, 1);
    gsl_vector_memcpy(&subeX.vector, &subtX.vector);
 
-/*
-   // Fill third col (which represents Qs) with responses VERIFIED
-   gsl_vector_view tGrpI;
-   subeX = gsl_matrix_column(eX, 2);
-   bool si, is_q;
-   for (int i = 0; i < _n; i++) {
-       tGrpI = gsl_matrix_subrow(_tX, i, 2, 2);
-       if (gsl_vector_isnull(&tGrpI.vector)) { // i.e., individual i is in group P
-           is_q = false;
-           si = gsl_ran_bernoulli(_r, genRandBeta(_r, _bP));
-           // std::cout << "P " << si << " ";
-       } else if (gsl_vector_max_index(&tGrpI.vector) == 0) { // i.e., i is in Q
-           is_q = true;
-           si = gsl_ran_bernoulli(_r, genRandBeta(_r, _bQ));
-           // std::cout << "Q " << si << " ";
-       } else if (gsl_vector_max_index(&tGrpI.vector) == 1) { // i.e., i is not in P nor Q
-           si = true; // Satificing will ALWAYS happen when option isn't present for respondent.
-           // std::cout << "X " << si << " ";
-       } else { // Something has gone wrong.
-           throw std::bad_function_call();
-       }
-       if (si) {
-           ++ns;
-           is_q = gsl_ran_bernoulli(_r, 0.5); // Bernoulli success == Q, Bernoulli fail == P. HARD SATIFICING.
-       }
-       // std::cout << is_q << std::endl;
-       gsl_vector_set(&subeX.vector, i, is_q);
-   }
-*/
+   // Fill third col (which represents Qs) with responses
+   subeX = gsl_matrix_column(eX, 2); // Column of item responses
+   char grp_i;
+   for (int i = 0; i < _tX->size1; i++) {
+       subtX = gsl_matrix_subrow(_tX, i, 2, 2); // Subrow of i'th group membership
+       grp_i = gsl_vector_isnull(&subtX.vector) ? 'P' : (gsl_vector_max_index(&subtX.vector) == 0) ? 'Q' : 'X';
 
-   // TODO: Check match between actual X and response X; check that number of reported Qs are expected.
+       switch (grp_i) {
+           case 'P':
+               if (_bP->betaBernR()) {
+                   gsl_vector_set(&subeX.vector, i, gsl_ran_bernoulli(_r, 0.5));
+                   ns++;
+               } else {
+                   gsl_vector_set(&subeX.vector, i, 0);
+               }
+               break;
+           case 'Q':
+               if (_bQ->betaBernR()) {
+                   gsl_vector_set(&subeX.vector, i, gsl_ran_bernoulli(_r, 0.5));
+                   ns++;
+               } else {
+                   gsl_vector_set(&subeX.vector, i, 1);
+               }
+               break;
+           case 'X':
+               // Always satisfice.
+               gsl_vector_set(&subeX.vector, i, gsl_ran_bernoulli(_r, 0.5));
+               ++ns;
+               break;
+           default: // Should be impossible, but worth a check.
+               throw std::length_error("There are members with an invalid group.");
+       }
+   }
+
    return ns;
 }
 

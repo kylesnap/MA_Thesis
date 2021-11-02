@@ -119,7 +119,6 @@ TEST_CASE("Response Matrix Generation") {
         CHECK(gsl_stats_mean(vecP->data, vecP->stride, vecP->size) == Catch::Detail::Approx(0.26).margin(0.01));
         CHECK(gsl_stats_variance(vecP->data, vecP->stride, vecP->size) == Catch::Detail::Approx(0.0038).margin(0.01));
 
-
         for (int i = 0; i < vecP->size; i++) {
             gsl_vector_set(vecP, i, tst3.betaR());
         }
@@ -136,13 +135,64 @@ TEST_CASE("Response Matrix Generation") {
         gsl_matrix_free(bad_x);
         gsl_matrix_free(bad_x2);
 
-        /*
         gsl_matrix *ex = gsl_matrix_calloc(100, 3);
         tst.fillResponses(ex);
 
         gsl_matrix_view tx2 = gsl_matrix_submatrix(tst.getTrueX(), 0, 0, 100, 2);
         gsl_matrix_view ex2 = gsl_matrix_submatrix(ex, 0, 0, 100, 2);
 
-        REQUIRE(gsl_matrix_equal(&tx2.matrix, &ex2.matrix)); */
+        REQUIRE(gsl_matrix_equal(&tx2.matrix, &ex2.matrix));
     }
+
+    SECTION("Satisficing Rate Checks") {
+        auto *tst2 = new BetaGen(2, 50, r);
+        auto *tst3 = new BetaGen(-1, 500, r);
+
+        DesignMat true1 = DesignMat(100,  dbP,  dbQ, r, 0.75, 0.25);
+        DesignMat true2 = DesignMat(100,  tst2,  dbQ, r, 0.75, 0.25);
+        DesignMat true3 = DesignMat(100,  dbP,  tst3, r, 0.75, 0.25);
+
+        gsl_matrix *ex = gsl_matrix_calloc(100, 3);
+        for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
+            CHECK(true1.fillResponses(ex) >= true1.tallyGrps()['X']); // Some P and Q will satisfice.
+            CHECK(true2.fillResponses(ex) >= true2.tallyGrps()['X'] + true2.tallyGrps()['P']); // All X and P satisfice.
+            CHECK(true3.fillResponses(ex) <= 100 - true3.tallyGrps()['Q']); // No Q satisfice.
+        }
+    }
+
+    SECTION("Satisficing Count") {
+        auto *tst2 = new BetaGen(2, 50, r);
+        auto *tst3 = new BetaGen(-1, 500, r);
+
+        DesignMat true1 = DesignMat(10000,  dbP,  dbQ, r, 0.0, 0.0);
+        DesignMat true2 = DesignMat(10000,  tst2,  dbQ, r, 0.5, 0.0);
+        DesignMat true3 = DesignMat(10000,  tst3,  tst3, r, 0.5, 0.5);
+        DesignMat true4 = DesignMat(10000,  tst2,  tst3, r, 0.5, 0.5);
+
+        gsl_matrix *ex = gsl_matrix_calloc(10000, 3);
+        gsl_vector_view grps;
+        for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
+            true1.fillResponses(ex); // All satisficing
+            grps = gsl_matrix_column(ex, 2);
+            CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
+                Catch::Detail::Approx(0.5).margin(0.05));
+
+            true2.fillResponses(ex); // All satisficing (P and X, no Q).
+            grps = gsl_matrix_column(ex, 2);
+            CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
+                Catch::Detail::Approx(0.5).margin(0.05));
+
+            true3.fillResponses(ex); // No one satisfices. P == Q == 0.5
+            grps = gsl_matrix_column(ex, 2);
+            CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
+                Catch::Detail::Approx(0.5).margin(0.05));
+
+            true4.fillResponses(ex); // All Ps satisfice. Q == All Q + One Half of P.
+            grps = gsl_matrix_column(ex, 2);
+            double exp_q = (double) (true4.tallyGrps()['Q'] + true4.tallyGrps()['P']/2) / 10000.0;
+            CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
+                Catch::Detail::Approx(exp_q).margin(0.05));
+        }
+    }
+
 }
