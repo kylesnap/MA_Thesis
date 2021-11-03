@@ -52,7 +52,7 @@ public:
     std::vector<double> summary(bool head = false);
     void getDesignMat(std::vector<float> &v);
 
-    const gsl_matrix *getTX();
+    const gsl_matrix * getTX();
 
     int genResponses(gsl_matrix *eX);
 };

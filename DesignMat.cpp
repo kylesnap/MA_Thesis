@@ -110,7 +110,7 @@ std::vector<double> DesignMat::summary(bool head) { // TESTED!
     return {mean, var, q, x};
 }
 
-const gsl_matrix*  DesignMat::getTX() {
+const gsl_matrix* DesignMat::getTX() {
     return _tX;
 }
 
