@@ -21,10 +21,7 @@ public:
     LmOLS(const gsl_matrix *X, const gsl_vector *Y);
 
     void getBetaHat(std::vector<double> &v);
-    void getBetaHat(std::string &s);
-
     void getBetaSE(std::vector<double> &v);
-    void getBetaSE(std::string &s);
 
     double getRSQ();
 };

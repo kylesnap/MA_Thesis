@@ -6,8 +6,10 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <vector>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_vector.h>
+
 
 #include "DesignMat.h"
 
@@ -24,5 +26,6 @@ public:
     SimCell(int n, float rSq, std::tuple<float, float> betaP, std::tuple<float, float> betaQ, std::tuple<float, float> propGrps,
             std::tuple<float, float, float> paramsTrue, gsl_rng *r);
 
+    void getSimCell(std::vector<float> &v, bool print = false);
     // void run()
 };

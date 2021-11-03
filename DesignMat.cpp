@@ -166,6 +166,17 @@ int DesignMat::genResponses(gsl_matrix *eX) { // Validated!
    return ns;
 }
 
+void DesignMat::getDesignMat(std::vector<float> &v) {
+    // Appends parameters of design matrix (N; Abs. Count of P, Q, and X; Beta Dists for P and Q.)
+    v.push_back((float) _n);
+    std::map<char, int> grps = tallyGrps();
+    v.push_back((float) grps['P']);
+    v.push_back((float) grps['Q']);
+    v.push_back((float) grps['X']);
+    _bP->getBetaDist(v);
+    _bQ->getBetaDist(v);
+}
+
 BetaGen::BetaGen(float mode, float conc, gsl_rng *r) { // VALIDATED
     if (conc < 2) throw std::out_of_range("Concentration below 2.");
     _r = r;
@@ -192,4 +203,10 @@ double BetaGen::betaR() { // VALIDATED
 
 int BetaGen::betaBernR() { // VALIDATED
     return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_bernoulli(_r, gsl_ran_beta(_r, _a, _b)); // NOLINT(cppcoreguidelines-narrowing-conversions)
+}
+
+void BetaGen::getBetaDist(std::vector<float> &v) { //
+    // Prints A and B for distribution (A and B are both negative if beh == -1, both 0 if beh == 1
+    v.push_back(_a);
+    v.push_back(_b);
 }

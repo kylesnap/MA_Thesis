@@ -55,26 +55,10 @@ void LmOLS::getBetaHat(std::vector<double> &v) {
     }
 }
 
-void LmOLS::getBetaHat(std::string &s) {
-    // Pushes the betahat vector to a comma delim. string.
-    for (int i = 0; i < _betaHat->size; i++) {
-        s.append(std::to_string(gsl_vector_get(_betaHat, i)));
-        s.append(",");
-    }
-}
-
 void LmOLS::getBetaSE(std::vector<double> &v) {
     // Pushes the betahat vector onto std::vector v
     for (int i = 0; i < _betaSE->size; i++) {
         v.push_back(gsl_vector_get(_betaSE, i));
-    }
-}
-
-void LmOLS::getBetaSE(std::string &s) {
-    // Pushes the betahat vector to a comma delim. string.
-    for (int i = 0; i < _betaSE->size; i++) {
-        s.append(std::to_string(gsl_vector_get(_betaSE, i)));
-        s.append(",");
     }
 }
 

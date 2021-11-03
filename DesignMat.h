@@ -29,6 +29,7 @@ public:
 
     double betaR();
     int betaBernR();
+    void getBetaDist(std::vector<float> &v);
 };
 
 class DesignMat {
@@ -49,6 +50,7 @@ public:
 
     std::map<char, int> tallyGrps();
     std::vector<double> summary(bool head = false);
+    void getDesignMat(std::vector<float> &v);
 
     const gsl_matrix *getTX();
 
