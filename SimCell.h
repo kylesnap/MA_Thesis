@@ -5,25 +5,24 @@
 
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_vector.h>
+
+#include "DesignMat.h"
 
 #pragma once
 
-struct CellParam {
-    int n = std::numeric_limits<int>::max();
-    float testFloat = std::numeric_limits<float>::max();
-};
-
 class SimCell {
 private:
-    const int REP = 1;
-    const int K = 2;
-
-    gsl_rng *_r;
-    std::string _fileName;
-    int _n;
-    float _testFloat;
+    int const REPS = 10;
+    
+    float _rSq;
+    DesignMat *_xMat;
+    gsl_vector *_pTrue = gsl_vector_alloc(3);
 public:
-    SimCell(CellParam p, gsl_rng *r, std::string fileName);
-    void run() const;
+    SimCell(int n, float rSq, std::tuple<float, float> betaP, std::tuple<float, float> betaQ, std::tuple<float, float> propGrps,
+            std::tuple<float, float, float> paramsTrue, gsl_rng *r);
+
+    // void run()
 };

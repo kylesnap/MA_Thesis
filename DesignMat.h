@@ -50,7 +50,7 @@ public:
     std::map<char, int> tallyGrps();
     std::vector<double> summary(bool head = false);
 
-    int fillResponses(gsl_matrix *eX);
+    const gsl_matrix *getTX();
 
-    gsl_matrix *getTrueX();
+    int genResponses(gsl_matrix *eX);
 };

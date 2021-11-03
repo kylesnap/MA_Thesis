@@ -110,11 +110,11 @@ std::vector<double> DesignMat::summary(bool head) { // TESTED!
     return {mean, var, q, x};
 }
 
-gsl_matrix*  DesignMat::getTrueX() {
+const gsl_matrix*  DesignMat::getTX() {
     return _tX;
 }
 
-int DesignMat::fillResponses(gsl_matrix *eX) { // Validated!
+int DesignMat::genResponses(gsl_matrix *eX) { // Validated!
    // Takes in an empty design matrix, then copies tX data into it; however, column = 2 is binary responses to survey q.
    // Returns number of satisficiers.
    int ns = 0;

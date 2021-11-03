@@ -20,6 +20,7 @@
 
 #define TEST true
 
+/*
 template<typename Iterator>
 void cartProduct(std::set<int> const &n, std::set<float> const &b1, Iterator out) {
     // Good, ol' fashioned nested for loops like your mom used to make (input: several vectors and an iterator
@@ -33,6 +34,8 @@ void cartProduct(std::set<int> const &n, std::set<float> const &b1, Iterator out
         }
     }
 }
+
+*/
 
 template<typename T>
 void printSet(std::set<T> set) {
@@ -167,6 +170,7 @@ int main() {
     } while (!std::cin.fail() && entry != 'y' && entry != 'n');
     if (entry == 'n') exit(EXIT_SUCCESS);
 
+    /*
     std::vector<CellParam> allCells;
     cartProduct(n, testFloat, back_inserter(allCells));
 
@@ -180,7 +184,7 @@ int main() {
             std::cout << "Cell failed to construct. Skipping.";
             continue;
         }
-    }
+    } */
 
     return 0;
 }

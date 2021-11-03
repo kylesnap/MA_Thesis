@@ -129,16 +129,16 @@ TEST_CASE("Response Matrix Generation") {
     SECTION("First Rows Copy + Dimensionality Check") {
         DesignMat tst = DesignMat(100,  dbP,  dbQ, r, 0.75, 0.25);
         gsl_matrix *bad_x = gsl_matrix_calloc(101, 3);
-        REQUIRE_THROWS(tst.fillResponses(bad_x));
+        REQUIRE_THROWS(tst.genResponses(bad_x));
         gsl_matrix *bad_x2 = gsl_matrix_calloc(100, 4);
-        REQUIRE_THROWS(tst.fillResponses(bad_x2));
+        REQUIRE_THROWS(tst.genResponses(bad_x2));
         gsl_matrix_free(bad_x);
         gsl_matrix_free(bad_x2);
 
         gsl_matrix *ex = gsl_matrix_calloc(100, 3);
-        tst.fillResponses(ex);
+        tst.genResponses(ex);
 
-        gsl_matrix_view tx2 = gsl_matrix_submatrix(tst.getTrueX(), 0, 0, 100, 2);
+        gsl_matrix_const_view tx2 = gsl_matrix_const_submatrix(tst.getTX(), 0, 0, 100, 2);
         gsl_matrix_view ex2 = gsl_matrix_submatrix(ex, 0, 0, 100, 2);
 
         REQUIRE(gsl_matrix_equal(&tx2.matrix, &ex2.matrix));
@@ -153,11 +153,11 @@ TEST_CASE("Response Matrix Generation") {
         DesignMat true3 = DesignMat(100,  dbP,  tst3, r, 0.75, 0.25);
 
         gsl_matrix *ex = gsl_matrix_calloc(100, 3);
-        for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
-            CHECK(true1.fillResponses(ex) >= true1.tallyGrps()['X']); // Some P and Q will satisfice.
-            CHECK(true2.fillResponses(ex) >= true2.tallyGrps()['X'] + true2.tallyGrps()['P']); // All X and P satisfice.
-            CHECK(true3.fillResponses(ex) <= 100 - true3.tallyGrps()['Q']); // No Q satisfice.
-        }
+        // for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
+            CHECK(true1.genResponses(ex) >= true1.tallyGrps()['X']); // Some P and Q will satisfice.
+            CHECK(true2.genResponses(ex) >= true2.tallyGrps()['X'] + true2.tallyGrps()['P']); // All X and P satisfice.
+            CHECK(true3.genResponses(ex) <= 100 - true3.tallyGrps()['Q']); // No Q satisfice.
+        // }
     }
 
     SECTION("Satisficing Count") {
@@ -171,28 +171,28 @@ TEST_CASE("Response Matrix Generation") {
 
         gsl_matrix *ex = gsl_matrix_calloc(10000, 3);
         gsl_vector_view grps;
-        for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
-            true1.fillResponses(ex); // All satisficing
+        // for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
+            true1.genResponses(ex); // All satisficing
             grps = gsl_matrix_column(ex, 2);
             CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
                 Catch::Detail::Approx(0.5).margin(0.05));
 
-            true2.fillResponses(ex); // All satisficing (P and X, no Q).
+            true2.genResponses(ex); // All satisficing (P and X, no Q).
             grps = gsl_matrix_column(ex, 2);
             CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
                 Catch::Detail::Approx(0.5).margin(0.05));
 
-            true3.fillResponses(ex); // No one satisfices. P == Q == 0.5
+            true3.genResponses(ex); // No one satisfices. P == Q == 0.5
             grps = gsl_matrix_column(ex, 2);
             CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
                 Catch::Detail::Approx(0.5).margin(0.05));
 
-            true4.fillResponses(ex); // All Ps satisfice. Q == All Q + One Half of P.
+            true4.genResponses(ex); // All Ps satisfice. Q == All Q + One Half of P.
             grps = gsl_matrix_column(ex, 2);
             double exp_q = (double) (true4.tallyGrps()['Q'] + true4.tallyGrps()['P']/2) / 10000.0;
             CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
                 Catch::Detail::Approx(exp_q).margin(0.05));
-        }
+        // }
     }
 
 }
