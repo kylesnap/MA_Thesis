@@ -89,15 +89,15 @@ TEST_CASE("Hand-Written Test") {
 
     LmOLS mod = LmOLS(&X.matrix, &Y.vector);
 
-    std::vector<double> betas;
+    std::vector<float> betas;
     mod.getBetaHat(betas);
     REQUIRE_THAT(betas,
-                 Catch::Matchers::Approx(std::vector<double>{1.071, -0.246, -0.510}).margin(0.001));
+                 Catch::Matchers::Approx(std::vector<float>{1.071, -0.246, -0.510}).margin(0.001));
 
-    std::vector<double> s;
+    std::vector<float> s;
     mod.getBetaSE(s);
     REQUIRE_THAT(s,
-                 Catch::Matchers::Approx(std::vector<double>{0.861, 0.778, 0.778}).margin(0.001));
+                 Catch::Matchers::Approx(std::vector<float>{0.861, 0.778, 0.778}).margin(0.001));
 
     REQUIRE(mod.getRSQ() == Catch::Detail::Approx(0.528).margin(0.001));
 }
@@ -109,15 +109,15 @@ TEST_CASE("Test LM with Data") {
 
     LmOLS mod = LmOLS(&X.matrix, &y.vector);
 
-    std::vector<double> betas;
+    std::vector<float> betas;
     mod.getBetaHat(betas);
     REQUIRE_THAT(betas,
-                 Catch::Matchers::Approx(std::vector<double>{-0.401, 1.472, 0.02400}).margin(0.001));
+                 Catch::Matchers::Approx(std::vector<float>{-0.401, 1.472, 0.02400}).margin(0.001));
 
-    std::vector<double> s;
+    std::vector<float> s;
     mod.getBetaSE(s);
     REQUIRE_THAT(s,
-                 Catch::Matchers::Approx(std::vector<double>{0.512, 0.122, 0.007}).margin(0.001));
+                 Catch::Matchers::Approx(std::vector<float>{0.512, 0.122, 0.007}).margin(0.001));
 
     REQUIRE(mod.getRSQ() == Catch::Detail::Approx(0.848).margin(0.001));
 }
