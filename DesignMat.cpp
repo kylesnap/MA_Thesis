@@ -177,18 +177,18 @@ void DesignMat::getDesignMat(std::vector<float> &v) {
     _bQ->getBetaDist(v);
 }
 
-BetaGen::BetaGen(float mode, float conc, gsl_rng *r) { // VALIDATED
+BetaGen::BetaGen(float mode, float conc, gsl_rng *r, bool print) { // VALIDATED
     if (conc < 2) throw std::out_of_range("Concentration below 2.");
     _r = r;
     _mode = mode;
     _conc = conc;
 
     if (mode < 0) {
-        std::cout << "Mode below zero: All variables generated will have p = 0." << std::endl;
+        if (print) std::cout << "Mode below zero: All variables generated will have p = 0." << std::endl;
         _bh = -1;
         return;
     } else if (mode > 1) {
-        std::cout << "Mode above one: All variables generated will have p = 1" << std::endl;
+        if (print) std::cout << "Mode above one: All variables generated will have p = 1" << std::endl;
         _bh = 1;
         return;
     }
@@ -207,6 +207,6 @@ int BetaGen::betaBernR() { // VALIDATED
 
 void BetaGen::getBetaDist(std::vector<float> &v) { //
     // Prints A and B for distribution (A and B are both negative if beh == -1, both 0 if beh == 1
-    v.push_back(_a);
-    v.push_back(_b);
+    (_bh == -1) ? v.push_back(-1) : (_bh == 1) ? v.push_back(0) : v.push_back(_a);
+    (_bh == -1) ? v.push_back(-1) : (_bh == 1) ? v.push_back(0) : v.push_back(_b);
 }

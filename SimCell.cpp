@@ -5,12 +5,12 @@
 
 #include "SimCell.h"
 
-SimCell::SimCell(int n, float rSq, std::tuple<float, float> betaP, std::tuple<float, float> betaQ,
+SimCell::SimCell(int n, float varErr, std::tuple<float, float> betaP, std::tuple<float, float> betaQ,
                  std::tuple<float, float> propGrps, std::tuple<float, float, float, float> paramsTrue, gsl_rng *r) {
 
     // Error checks for RSQ
-    if ((rSq - 1) * rSq >= 0) throw std::out_of_range("RSQ is a value outside of [0, 1]");
-    _rSq = rSq;
+    if (varErr <= 0) throw std::out_of_range("Variance of the Errors is smaller than zero.");
+    _varErr = varErr;
     _r = r;
 
     // Handles odd sample sizes silently.
@@ -28,12 +28,12 @@ SimCell::SimCell(int n, float rSq, std::tuple<float, float> betaP, std::tuple<fl
 }
 
 void SimCell::toVec(std::vector<float> &v, bool print) {
-    // Print SimCell params (All Params of Design Mat, true params, RSQ).
+    // Print SimCell params (All Params of Design Mat, true params, sigma).
     _xMat->getDesignMat(v);
     for (int i = 0; i < 4; i++) {
         v.push_back(gsl_vector_get(_pTrue, i));
     }
-    v.push_back(_rSq);
+    v.push_back(_varErr);
     if (print) {
         for (float i : v) {
             std::cout << i << " ";
@@ -43,25 +43,54 @@ void SimCell::toVec(std::vector<float> &v, bool print) {
 }
 
 void SimCell::run() {
+    int n = (int) _xMat->getTX()->size1;
     // Build a vector of 'true' Y responses.
-    // RSQ = 1 - (var[Residuals] / var[Total])
-    // var(e) = (1- RSQ) * sum(B[j]**2) / RSQ
-    float err_var = pow(gsl_vector_get(_pTrue, 1), 2) + pow(gsl_vector_get(_pTrue, 2), 2) +
-            pow(gsl_vector_get(_pTrue, 3), 2);
-    err_var = (err_var * (1 - _rSq)) / _rSq;
-    if (err_var <= 0) throw std::bad_function_call();
 
     // Add error terms to tY.
-    gsl_vector *tY = gsl_vector_calloc(_xMat->getTX()->size1);
+    gsl_vector *tY = gsl_vector_calloc(n);
     for (int i = 0; i < tY->size; i++) {
-        gsl_vector_set(tY, i, gsl_ran_gaussian(_r, err_var));
+        gsl_vector_set(tY, i, gsl_ran_gaussian(_r, _varErr));
     }
 
     // Build tY = X * Params + e
     gsl_blas_dgemv(CblasNoTrans, 1.0, _xMat->getTX(), _pTrue, 1.0, tY);
+    LmOLS chk = LmOLS(_xMat->getTX(), tY);
 
-    // TODO: Check RSQ of true data
-    // TODO: Check model properties of response data and build logger
-    // TODO: Build a monte carlo loop
+    // Testing
+    std::vector<float> v;
+    chk.getBetaHat(v);
+    chk.getBetaSE(v);
+
+    for (float i : v) {
+        std::cout << i << " ";
+    }
+    std::cout << chk.getRSQ() << std::endl;
+    std::cout << "=" << std::endl;
+
+    // Begin simulation loop
+    gsl_matrix *resp = gsl_matrix_alloc(n, 3);
+    LmOLS *mod;
+    std::cout << "I,N,NP,NQ,NX,BP_A,BP_B,BQ_A,BQ_B,BTRUE_0,BTRUE_1,"
+                 "BTRUE_Q,BTRUE_X,ERR_VAR,BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ" << std::endl;
+    for (int i = 0; i < REPS; i++) {
+        // Change responses based on satisficing and fit new model.
+        _xMat->genResponses(resp);
+        mod = new LmOLS(resp, tY);
+
+        // Assemble line to print.
+        v.clear();
+        v.push_back((float) i);
+        toVec(v);
+        mod->getBetaHat(v);
+        mod->getBetaSE(v);
+        v.push_back(mod->getRSQ());
+
+        for (float i : v) {
+            std::cout << i << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "===" << std::endl;
+
     // TODO: Final testing!
 }

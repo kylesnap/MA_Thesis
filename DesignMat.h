@@ -25,7 +25,7 @@ private:
     float _a = 0;
     float _b = 0;
 public:
-    BetaGen(float mode, float conc, gsl_rng *r);
+    BetaGen(float mode, float conc, gsl_rng *r, bool print = false);
 
     double betaR();
     int betaBernR();

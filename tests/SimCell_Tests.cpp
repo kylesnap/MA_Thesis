@@ -19,7 +19,7 @@ TEST_CASE("Error Throws") {
 
     // Bad N or Rsq
     REQUIRE_THROWS_AS(SimCell(2, 0.8, goodBeta, goodBeta, goodP, goodTheta, r2), std::length_error);
-    REQUIRE_THROWS_AS(SimCell(100, 1.2, goodBeta, goodBeta, goodP, goodTheta, r2), std::out_of_range);
+    REQUIRE_THROWS_AS(SimCell(100, 0, goodBeta, goodBeta, goodP, goodTheta, r2), std::out_of_range);
 
     // Bad Beta Params
     REQUIRE_THROWS_AS(SimCell(100, 0.8, badBeta, goodBeta, goodP, goodTheta, r2), std::out_of_range);
@@ -61,4 +61,18 @@ TEST_CASE("Test Design Mat Construction") {
     tst3.toVec(v);
     // N = 420, RSQ = 0.69, BQ/BP are different, PROP = (210, 210, 0), THETA = 1, 0, 1
     CHECK_THAT(v, Catch::Matchers::Equals(std::vector<float>{420, 210, 210, 0, 25, 25, 10.5, 29.5, 1, 0, 1, 0, 0.69}));
+}
+
+TEST_CASE("LM Fitting Check") {
+    std::tuple<float, float> beta_n = {-1, 50};
+
+    std::tuple<float, float> p1 = {1.0/3.0, 1.0/3.0};
+
+    std::tuple<float, float, float, float> null = {1, 0, 0, 0};
+    std::tuple<float, float, float, float> nnull = {1, 1, 1, 1};
+
+    SimCell tst1 = SimCell(1000, 0.8, beta_n, beta_n, p1, null, r2);
+    tst1.run();
+    SimCell tst2 = SimCell(1000, 0.8, beta_n, beta_n, p1, nnull, r2);
+    tst2.run();
 }
