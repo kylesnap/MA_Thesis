@@ -72,7 +72,7 @@ TEST_CASE("LM Fitting Check") {
     std::tuple<float, float, float, float> nnull = {1, 1, 1, 1};
 
     SimCell tst1 = SimCell(1000, 0.8, beta_n, beta_n, p1, null, r2);
-    tst1.run();
+    // tst1.run();
     SimCell tst2 = SimCell(1000, 0.8, beta_n, beta_n, p1, nnull, r2);
-    tst2.run();
+    // tst2.run();
 }

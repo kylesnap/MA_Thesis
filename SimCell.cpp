@@ -42,7 +42,7 @@ void SimCell::toVec(std::vector<float> &v, bool print) {
     }
 }
 
-void SimCell::run() {
+std::string SimCell::run() {
     int n = (int) _xMat->getTX()->size1;
     // Build a vector of 'true' Y responses.
 
@@ -52,12 +52,12 @@ void SimCell::run() {
         gsl_vector_set(tY, i, gsl_ran_gaussian(_r, _varErr));
     }
 
+    /*
     // Build tY = X * Params + e
     gsl_blas_dgemv(CblasNoTrans, 1.0, _xMat->getTX(), _pTrue, 1.0, tY);
     LmOLS chk = LmOLS(_xMat->getTX(), tY);
 
     // Testing
-    std::vector<float> v;
     chk.getBetaHat(v);
     chk.getBetaSE(v);
 
@@ -67,11 +67,15 @@ void SimCell::run() {
     std::cout << chk.getRSQ() << std::endl;
     std::cout << "=" << std::endl;
 
+     */
     // Begin simulation loop
+    std::vector<float> v;
+    std::string out;
     gsl_matrix *resp = gsl_matrix_alloc(n, 3);
     LmOLS *mod;
-    std::cout << "I,N,NP,NQ,NX,BP_A,BP_B,BQ_A,BQ_B,BTRUE_0,BTRUE_1,"
-                 "BTRUE_Q,BTRUE_X,ERR_VAR,BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ" << std::endl;
+    std::cout << "I,N,NP,NQ,NX,BP_A,BP_B,BQ_A,BQ_B,"
+                 "BTRUE_0,BTRUE_1,BTRUE_Q,BTRUE_X,ERR_VAR,"
+                 "BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ" << std::endl;
     for (int i = 0; i < REPS; i++) {
         // Change responses based on satisficing and fit new model.
         _xMat->genResponses(resp);
@@ -85,12 +89,14 @@ void SimCell::run() {
         mod->getBetaSE(v);
         v.push_back(mod->getRSQ());
 
-        for (float i : v) {
-            std::cout << i << " ";
+        for (float j : v) {
+            out.append(std::to_string(j));
+            out.append(",");
         }
-        std::cout << std::endl;
+        out.append("\n");
     }
-    std::cout << "===" << std::endl;
+
+    return out;
 
     // TODO: Final testing!
 }

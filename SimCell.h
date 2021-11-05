@@ -4,6 +4,7 @@
 // 16SEP21
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -20,9 +21,10 @@
 
 class SimCell {
 private:
-    int const REPS = 10;
+    int const REPS = 1000;
     
     float _varErr;
+    std::string _out;
     gsl_rng *_r;
     DesignMat *_xMat;
     gsl_vector *_pTrue = gsl_vector_alloc(4);
@@ -31,5 +33,5 @@ public:
             std::tuple<float, float, float, float> paramsTrue, gsl_rng *r);
 
     void toVec(std::vector<float> &v, bool print = false);
-    void run();
+    std::string run();
 };

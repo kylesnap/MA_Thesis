@@ -3,13 +3,9 @@
 // Kyle Dewsnap
 // 15SEP21
 
-#include <string>
 #include <iostream>
-#include <fstream>
 #include <vector>
-#include <cstdlib>
 #include <ctime>
-#include <set>
 #include <tuple>
 #include <gsl/gsl_rng.h>
 
@@ -18,62 +14,10 @@
 #define CATCH_CONFIG_RUNNER
 #include "tests/catch.hpp"
 
-#define TEST true
-
-/*
-template<typename Iterator>
-void cartProduct(std::set<int> const &n, std::set<float> const &b1, Iterator out) {
-    // Good, ol' fashioned nested for loops like your mom used to make (input: several vectors and an iterator
-    // output: vector of tuples.)
-    for (int i: n) {
-        for (float j: b1) {
-            CellParam temp;
-            temp.n = i;
-            temp.testFloat = j;
-            *out++ = temp;
-        }
-    }
-}
-
-*/
-
-template<typename T>
-void printSet(std::set<T> set) {
-    // Prints set elements
-    std::for_each(set.begin(), set.end(), [](const T &e) { std::cout << e << " "; });
-}
-
-template<typename T>
-T strToType(std::string const &str, int range) {
-    // takes in string, transforms to type 'T' and checks whether range is met.
-
-    T value = (typeid(T) == typeid(int)) ? std::stoi(str) :
-              (typeid(T) == typeid(float)) ? std::stof(str) :
-              throw std::bad_typeid();
-
-    if (value > 0 && range > 0 || value >= 0 && range == 0 || range < 0) return value;
-    throw std::out_of_range("One or more arguments did not follow the range specifications.");
-}
-
-template<typename T>
-std::set<T> parse_params(std::string str, int range) { // Here
-    // Takes in user entered parameters, cleans them, then outputs 2D array of numeric parameters.
-    std::vector<T> entry;
-
-    while (!empty(str)) {
-        std::size_t found = str.find(',');
-        entry.push_back(strToType<T>(str.substr(0, found), range));
-        str = found == std::string::npos ? "" : str.substr(++found);
-    }
-
-    return std::set<T>(entry.begin(), entry.end());
-}
+#define TEST false
 
 int main() {
-
-    std::set<int> n;
-    std::set<float> testFloat;
-    std::string entSizes, entFloat;
+    char entry;
 
     std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
     std::cout << "Welcome to KD's Simulation of Linear Regression!" << std::endl;
@@ -83,108 +27,69 @@ int main() {
         return Catch::Session().run();
     }
 
-    // Ask whether parameters should be acquired, or if this is a test run.
-    char entry;
-    do {
-        std::cout << "Use dummy parameters? [y/n]: ";
-        std::cin >> entry;
-    } while (!std::cin.fail() && entry != 'y' && entry != 'n');
-
-
-    if (entry == 'y') {
-        std::cout << "Skipping input steps..." << std::endl;
-        n = {5, 10};
-        testFloat = {1, 2};
-    } else {
-        // Asking and processing simulation parameters
-        std::cout << "Please enter the following parameters separated by commas:" << std::endl;
-        std::cout << "Sample Sizes (Must be larger than zero): ";
-        std::cin.ignore();
-        getline(std::cin, entSizes);
-        std::cout << "Test Parameter of Floats: ";
-        std::getline(std::cin, entFloat);
-        try {
-            n = parse_params<int>(entSizes, 1);
-            testFloat = parse_params<float>(entFloat, -1);
-        }
-        catch (std::invalid_argument &e) {
-            std::cout << "Error in parsing your arguments: "
-                         "Please only use numerals and commas in input line." << std::endl;
-            main();
-        }
-        catch (std::out_of_range &e) {
-            std::cout << "Error in parsing your arguments: Please follow the range guidelines." << std::endl;
-            main();
-        }
-        catch (...) {
-            std::cout << "Unspecified error occurred. Check typing and weep." << std::endl;
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    time_t rawTime;
-    struct tm *timeInfo;
-
-    time(&rawTime);
-    timeInfo = localtime(&rawTime);
-
-    // Prepare random and ask for seeding (for testing!)
+    // Prepare random and ask for seeding.
     gsl_rng_env_setup();
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
 
     do {
-        std::cout << "Would you like to seed random? [y/n]: ";
+        std::cout << "Seed random? [y/n]: ";
         std::cin >> entry;
     } while (!std::cin.fail() && entry != 'y' && entry != 'n');
     if (entry == 'y')  gsl_rng_set(r, 69);
 
-    //File IO object
+    // File IO Prep.
     do {
-        std::cout << "Would you like to output the results to a CSV? [y/n]: ";
+        std::cout << "Print to File? [y/n]: ";
         std::cin >> entry;
     } while (!std::cin.fail() && entry != 'y' && entry != 'n');
 
-    std::string fName;
-    // If entry is yes, then set the stream buffer to point to an output stream to entry.
+    std::ostream *out;
     if (entry == 'y') {
+        time_t rawTime;
+        struct tm *timeInfo;
+        time(&rawTime);
+        timeInfo = localtime(&rawTime);
+
         char fChar[32];
         strftime(fChar, 32, "simOut_%d%h%y_%H%M%S.csv", timeInfo);
-        fName = fChar;
-        std::cout << "File will be written in cur. dir: " << fName << std::endl;
+        std::cout << "File will be written in cur. dir: " << fChar << std::endl;
+
+        out = new std::ofstream(fChar);
     } else {
-        // Else, set the stream to just point to cout!
-        fName[0] = 0;
+        out = &std::cout;
     }
 
-    // Confirm parameters
-    std::cout << "~~~~~~~~~~~~~~~~~~~~ Confirm? ~~~~~~~~~~~~~~~~~~~~" << std::endl;
-    std::cout << "N: ";
-    printSet<int>(n);
-    std::cout << "\nTest Float: ";
-    printSet<float>(testFloat);
+    std::vector<int> trialN = {100, 500, 1000};
+    std::vector<float> trialVar = {1, 2, 3};
+    std::vector<std::tuple<float, float>> trialBetaP = {{-1,50}};
+    std::vector<std::tuple<float, float>> trialBetaQ = {{-1,50}};
+    std::vector<std::tuple<float, float>> trialPropG = {{0.5,0.5}};
+    std::vector<std::tuple<float, float, float, float>> trialParams = {{1,0,0,0}};
 
-    do {
-        std::cout << "\n[y/n]: ";
-        std::cin >> entry;
-    } while (!std::cin.fail() && entry != 'y' && entry != 'n');
-    if (entry == 'n') exit(EXIT_SUCCESS);
+    *out << "I,N,NP,NQ,NX,BP_A,BP_B,BQ_A,BQ_B,"
+           "BTRUE_0,BTRUE_1,BTRUE_Q,BTRUE_X,ERR_VAR,"
+           "BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ" << std::endl;
 
-    /*
-    std::vector<CellParam> allCells;
-    cartProduct(n, testFloat, back_inserter(allCells));
-
-    SimCell *currCell;
-    for (auto i : allCells) {
-        try {
-            currCell = new SimCell(i, r, fName);
-            currCell->run();
+    // God forgive me for this loop
+    SimCell *cell;
+    std::vector<float> ran;
+    for (auto n : trialN) {
+        for (auto var : trialVar) {
+            for (auto bP : trialBetaP) {
+                for (auto bQ : trialBetaQ) {
+                    for (auto pG : trialPropG) {
+                        for (auto prm : trialParams) {
+                            cell = new SimCell(n, var, bP, bQ, pG, prm, r);
+                            cell->toVec(ran, true);
+                            *out << cell->run() << std::endl;
+                        }
+                    }
+                }
+            }
         }
-        catch (std::bad_function_call &e) {
-            std::cout << "Cell failed to construct. Skipping.";
-            continue;
-        }
-    } */
+    }
 
+    if (out != &std::cout) delete out;
     return 0;
 }
