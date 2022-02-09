@@ -17,6 +17,7 @@
 #define TEST false
 
 int run_chap4(gsl_rng *r, std::ostream *out) {
+    // Runs the random factorial design of chapter four.
 
     int reps = 20;
     std::tuple<float, float, float, float> trialParams = {0,1,1,0};
@@ -33,8 +34,8 @@ int run_chap4(gsl_rng *r, std::ostream *out) {
         std::get<1>(groupProp) = 1 - std::get<0>(groupProp);
 
         // 25% change of no satisficing in each group (~% of no satisficing in both groups)
-        betaM = 0 < 0.25 ? noSat : betaM;
-        betaF = 0 < 0.25 ? noSat : betaF;
+        betaM = gsl_rng_uniform(r) < 0.25 ? noSat : betaM;
+        betaF = gsl_rng_uniform(r) < 0.35 ? noSat : betaF;
 
         cell = new SimCell(n, 1, betaM, betaF, groupProp, trialParams, r, false);
         cell->toVec(temp, true);
@@ -88,40 +89,18 @@ int main() {
         out = &std::cout;
     }
 
-    *out << "I,N,NP,NQ,NX,BP_A,BP_B,BQ_A,BQ_B,"
-           "BTRUE_0,BTRUE_1,BTRUE_Q,BTRUE_X,ERR_VAR,"
-           "BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ,NS" << std::endl;
-
     // Run either sim for chap 4 or chap 5
     do {
         std::cout << "Which chapter would you like to run? [4/5]: ";
         std::cin >> entry;
     } while (!std::cin.fail() && entry != '4' && entry != '5');
 
+    *out << "I,N,NM,NF,NX,BM_A,BM_B,BF_A,BF_B,"
+            "BTRUE_0,BTRUE_1,BTRUE_F,BTRUE_X,ERR_VAR,"
+            "BHAT_0,BHAT_1,BHAT_F,BSE_0,BSE_1,BSE_F,RSQ,NS,OBS_F" << std::endl;
+
     if (entry == '4') run_chap4(r, out);
     // CHAP 5 LINE HERE.
-
-    // God forgive me for this loop
-/*
-
-    SimCell *cell;R
-    std::vector<float> ran;
-    for (auto n : trialN) {
-        for (auto var : trialVar) {
-            for (auto bP : trialBetaP) {
-                for (auto bQ : trialBetaQ) {
-                    for (auto pG : trialPropG) {
-                        for (auto prm : trialParams) {
-                            cell = new SimCell(n, var, bP, bQ, pG, prm, r);
-                            cell->toVec(ran, true);
-                            *out << cell->run() << std::endl;
-                        }
-                    }
-                }
-            }
-        }
-    }
-*/
 
     if (out != &std::cout) delete out;
     return 0;

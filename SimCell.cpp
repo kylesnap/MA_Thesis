@@ -75,6 +75,9 @@ std::string SimCell::run() {
         v.push_back(mod->getRSQ());
         v.push_back((float) ns);
 
+        gsl_vector_view newCount = gsl_matrix_column(resp, 2);
+        v.push_back((float) gsl_vector_sum(&newCount.vector));
+
         for (float j : v) {
             out.append(std::to_string(j));
             out.append(",");
