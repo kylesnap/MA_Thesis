@@ -9,6 +9,7 @@
 # include <iostream>
 # include <algorithm>
 # include <random>
+# include <cmath>
 # include <map>
 # include <gsl/gsl_randist.h>
 # include <gsl/gsl_rng.h>
@@ -29,7 +30,7 @@ public:
 
     double betaR();
     int betaBernR();
-    void getBetaDist(std::vector<float> &v);
+    void getBetaDist(std::vector<float> &v) const;
 };
 
 class DesignMat {
@@ -41,12 +42,12 @@ private:
     std::vector<char>_grps;
     gsl_rng *_r;
     int _n;
-    BetaGen *_bP;
-    BetaGen *_bQ;
-    float _pP;
-    float _pQ;
+    BetaGen *_bM;
+    BetaGen *_bF;
+    float _pM;
+    float _pF;
 public:
-    DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, float pQ);
+    DesignMat(int n, BetaGen *bM, BetaGen *bF, gsl_rng *r, float pM, float pF);
 
     std::map<char, int> tallyGrps();
     std::vector<double> summary(bool head = false);

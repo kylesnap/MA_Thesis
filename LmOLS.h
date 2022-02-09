@@ -24,5 +24,5 @@ public:
     void getBetaHat(std::vector<float> &v);
     void getBetaSE(std::vector<float> &v);
 
-    float getRSQ();
+    float getRSQ() const;
 };

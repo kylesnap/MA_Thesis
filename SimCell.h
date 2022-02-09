@@ -21,16 +21,15 @@
 
 class SimCell {
 private:
-    int const REPS = 1000;
+    int _REPS = 1000;
     
     float _varErr;
-    std::string _out;
     gsl_rng *_r;
     DesignMat *_xMat;
     gsl_vector *_pTrue = gsl_vector_alloc(4);
 public:
-    SimCell(int n, float varErr, std::tuple<float, float> betaP, std::tuple<float, float> betaQ, std::tuple<float, float> propGrps,
-            std::tuple<float, float, float, float> paramsTrue, gsl_rng *r);
+    SimCell(int n, float varErr, std::tuple<float, float> betaM, std::tuple<float, float> betaF, std::tuple<float, float> propGrps,
+            std::tuple<float, float, float, float> paramsTrue, gsl_rng *r, bool repeat = true);
 
     void toVec(std::vector<float> &v, bool print = false);
     std::string run();

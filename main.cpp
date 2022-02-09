@@ -16,6 +16,34 @@
 
 #define TEST false
 
+int run_chap4(gsl_rng *r, std::ostream *out) {
+
+    int reps = 20;
+    std::tuple<float, float, float, float> trialParams = {0,1,1,0};
+    std::tuple<float, float> noSat = {-1, 5};
+    std::vector<float> temp;
+    SimCell *cell;
+
+    for (int i = 0; i < reps; i++) {
+        temp.clear();
+        int n = static_cast<int>(gsl_ran_flat(r, 50, 2000));
+        std::tuple<float, float> betaM = {gsl_ran_flat(r, 0, 1), gsl_ran_flat(r, 2, 50)};
+        std::tuple<float, float> betaF = {gsl_ran_flat(r, 0, 1), gsl_ran_flat(r, 2, 50)};
+        std::tuple<float, float> groupProp = {gsl_ran_flat(r, 0, 1), -1};
+        std::get<1>(groupProp) = 1 - std::get<0>(groupProp);
+
+        // 25% change of no satisficing in each group (~% of no satisficing in both groups)
+        betaM = 0 < 0.25 ? noSat : betaM;
+        betaF = 0 < 0.25 ? noSat : betaF;
+
+        cell = new SimCell(n, 1, betaM, betaF, groupProp, trialParams, r, false);
+        cell->toVec(temp, true);
+        *out << cell->run();
+    }
+
+    return 0;
+}
+
 int main() {
     char entry;
 
@@ -60,19 +88,23 @@ int main() {
         out = &std::cout;
     }
 
-    std::vector<int> trialN = {100, 500, 1000};
-    std::vector<float> trialVar = {1, 2, 3};
-    std::vector<std::tuple<float, float>> trialBetaP = {{-1,50}};
-    std::vector<std::tuple<float, float>> trialBetaQ = {{-1,50}};
-    std::vector<std::tuple<float, float>> trialPropG = {{0.5,0.5}};
-    std::vector<std::tuple<float, float, float, float>> trialParams = {{1,0,0,0}};
-
     *out << "I,N,NP,NQ,NX,BP_A,BP_B,BQ_A,BQ_B,"
            "BTRUE_0,BTRUE_1,BTRUE_Q,BTRUE_X,ERR_VAR,"
-           "BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ" << std::endl;
+           "BHAT_0,BHAT_1,BHAT_Q,BSE_0,BSE_1,BSE_Q,RSQ,NS" << std::endl;
+
+    // Run either sim for chap 4 or chap 5
+    do {
+        std::cout << "Which chapter would you like to run? [4/5]: ";
+        std::cin >> entry;
+    } while (!std::cin.fail() && entry != '4' && entry != '5');
+
+    if (entry == '4') run_chap4(r, out);
+    // CHAP 5 LINE HERE.
 
     // God forgive me for this loop
-    SimCell *cell;
+/*
+
+    SimCell *cell;R
     std::vector<float> ran;
     for (auto n : trialN) {
         for (auto var : trialVar) {
@@ -89,6 +121,7 @@ int main() {
             }
         }
     }
+*/
 
     if (out != &std::cout) delete out;
     return 0;

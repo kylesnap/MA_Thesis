@@ -10,54 +10,54 @@
 const gsl_rng_type *T = gsl_rng_default;
 gsl_rng *r = gsl_rng_alloc(T);
 
-BetaGen *dbP = new BetaGen(0.5, 50, r);
-BetaGen *dbQ = new BetaGen(0.5, 50, r);
+BetaGen *dbM = new BetaGen(0.5, 50, r);
+BetaGen *dbF = new BetaGen(0.5, 50, r);
 
 TEST_CASE("Exceptions") {
     REQUIRE_THROWS_AS(BetaGen(0.5, 1, r), std::out_of_range);
 
-    REQUIRE_THROWS_AS(DesignMat(2,  dbP,  dbQ, r, 0.5, 0.5), std::length_error); // N == K
-    REQUIRE_THROWS_AS(DesignMat(2,  dbP,  dbQ, r, 0.5, 0.5), std::length_error); // N < K
+    REQUIRE_THROWS_AS(DesignMat(2, dbM, dbF, r, 0.5, 0.5), std::length_error); // N == K
+    REQUIRE_THROWS_AS(DesignMat(2, dbM, dbF, r, 0.5, 0.5), std::length_error); // N < K
 
-    REQUIRE_THROWS_AS(DesignMat(100,  dbP,  dbQ, r, -0.5, 0.5), std::out_of_range); // pA < 0
-    REQUIRE_THROWS_AS(DesignMat(100,  dbP,  dbQ, r, 0.5, -0.5), std::out_of_range); // pA < 0
-    REQUIRE_THROWS_AS(DesignMat(100,  dbP,  dbQ, r, 1.0, 0.5), std::out_of_range); // pA > 1
-    REQUIRE_THROWS_AS(DesignMat(100,  dbP,  dbQ, r, 0.6, 0.5), std::out_of_range); // pA + pB > 1
+    REQUIRE_THROWS_AS(DesignMat(100, dbM, dbF, r, -0.5, 0.5), std::out_of_range); // pA < 0
+    REQUIRE_THROWS_AS(DesignMat(100, dbM, dbF, r, 0.5, -0.5), std::out_of_range); // pA < 0
+    REQUIRE_THROWS_AS(DesignMat(100, dbM, dbF, r, 1.0, 0.5), std::out_of_range); // pA > 1
+    REQUIRE_THROWS_AS(DesignMat(100, dbM, dbF, r, 0.6, 0.5), std::out_of_range); // pA + pB > 1
 
-    REQUIRE_NOTHROW(DesignMat(100,  dbP,  dbQ, r, 0.5, 0.5));
-    REQUIRE_NOTHROW(DesignMat(100,  dbP,  dbQ, r, 0.4, 0.3));
-    REQUIRE_NOTHROW(DesignMat(100,  dbP,  dbQ, r, 1, 0));
+    REQUIRE_NOTHROW(DesignMat(100, dbM, dbF, r, 0.5, 0.5));
+    REQUIRE_NOTHROW(DesignMat(100, dbM, dbF, r, 0.4, 0.3));
+    REQUIRE_NOTHROW(DesignMat(100, dbM, dbF, r, 1, 0));
 }
 
 TEST_CASE("Member Generation") {
 
     SECTION("Single Member Groups") {
 
-        DesignMat all_p = DesignMat(100,  dbP,  dbQ, r, 1, 0);
-        DesignMat all_q = DesignMat(50,  dbP,  dbQ, r, 0, 1);
-        DesignMat all_x = DesignMat(75,  dbP,  dbQ, r, 0, 0);
+        DesignMat all_p = DesignMat(100, dbM, dbF, r, 1, 0);
+        DesignMat all_q = DesignMat(50, dbM, dbF, r, 0, 1);
+        DesignMat all_x = DesignMat(75, dbM, dbF, r, 0, 0);
 
-        REQUIRE(all_p.tallyGrps()['P'] == 100);
-        REQUIRE(all_q.tallyGrps()['Q'] == 50);
+        REQUIRE(all_p.tallyGrps()['M'] == 100);
+        REQUIRE(all_q.tallyGrps()['F'] == 50);
         REQUIRE(all_x.tallyGrps()['X'] == 75);
 
     }
 
     SECTION("Complicated Group Splits") {
 
-        DesignMat tst = DesignMat(100,  dbP,  dbQ, r, 0.75, 0.25); // Even N, equal p and q, no x
-        REQUIRE(tst.tallyGrps()['P'] == 75);
-        REQUIRE(tst.tallyGrps()['Q'] == 25);
+        DesignMat tst = DesignMat(100, dbM, dbF, r, 0.75, 0.25); // Even N, equal p and q, no x
+        REQUIRE(tst.tallyGrps()['M'] == 75);
+        REQUIRE(tst.tallyGrps()['F'] == 25);
         REQUIRE(tst.tallyGrps()['X'] == 0);
 
-        tst = DesignMat(97,  dbP,  dbQ, r, 0.33, 0.33); // Odd N, equal p and q, add x
-        REQUIRE(tst.tallyGrps()['P'] == 33);
-        REQUIRE(tst.tallyGrps()['Q'] == 33);
-        REQUIRE(tst.tallyGrps()['X'] == 31);
+        tst = DesignMat(97, dbM, dbF, r, 0.33, 0.33); // Odd N, equal p and q, add x
+        REQUIRE(tst.tallyGrps()['M'] == 32);
+        REQUIRE(tst.tallyGrps()['F'] == 32);
+        REQUIRE(tst.tallyGrps()['X'] == 33);
 
-        tst = DesignMat(79,  dbP,  dbQ, r, 0.69, 0.0); // Odd N, no q, add x
-        REQUIRE(tst.tallyGrps()['P'] == 55);
-        REQUIRE(tst.tallyGrps()['Q'] == 0);
+        tst = DesignMat(79, dbM, dbF, r, 0.69, 0.0); // Odd N, no q, add x
+        REQUIRE(tst.tallyGrps()['M'] == 55);
+        REQUIRE(tst.tallyGrps()['F'] == 0);
         REQUIRE(tst.tallyGrps()['X'] == 24);
     }
 
@@ -66,16 +66,16 @@ TEST_CASE("Member Generation") {
 TEST_CASE("True Design Matrix Generation") {
     std::vector<double> res;
 
-    DesignMat tst = DesignMat(100000,  dbP,  dbQ, r, 0.75, 0.25);
-    res = {0, 1, (double) tst.tallyGrps()['Q'], (double) tst.tallyGrps()['X']};
+    DesignMat tst = DesignMat(100000, dbM, dbF, r, 0.75, 0.25);
+    res = {0, 1, (double) tst.tallyGrps()['F'], (double) tst.tallyGrps()['X']};
     REQUIRE_THAT(tst.summary(), Catch::Matchers::Approx(res).margin(0.01));
 
-    tst = DesignMat(97000,  dbP,  dbQ, r, 0.33, 0.33);
-    res = {0, 1, (double) tst.tallyGrps()['Q'], (double) tst.tallyGrps()['X']};
+    tst = DesignMat(97000, dbM, dbF, r, 0.33, 0.33);
+    res = {0, 1, (double) tst.tallyGrps()['F'], (double) tst.tallyGrps()['X']};
     REQUIRE_THAT(tst.summary(), Catch::Matchers::Approx(res).margin(0.01));
 
-    tst = DesignMat(79000,  dbP,  dbQ, r, 0.69, 0.0); // Odd N, no q, add x
-    res = {0, 1, (double) tst.tallyGrps()['Q'], (double) tst.tallyGrps()['X']};
+    tst = DesignMat(79000, dbM, dbF, r, 0.69, 0.0); // Odd N, no q, add x
+    res = {0, 1, (double) tst.tallyGrps()['F'], (double) tst.tallyGrps()['X']};
     REQUIRE_THAT(tst.summary(), Catch::Matchers::Approx(res).margin(0.01));
 }
 
@@ -108,7 +108,7 @@ TEST_CASE("Response Matrix Generation") {
         BetaGen tst3 = BetaGen(0.5, 500, r);
 
         for (int i = 0; i < vecP->size; i++) {
-            gsl_vector_set(vecP, i, dbP->betaR());
+            gsl_vector_set(vecP, i, dbM->betaR());
         }
         CHECK(gsl_stats_mean(vecP->data, vecP->stride, vecP->size) == Catch::Detail::Approx(0.5).margin(0.01));
         CHECK(gsl_stats_variance(vecP->data, vecP->stride, vecP->size) == Catch::Detail::Approx(0.0025).margin(0.01));
@@ -127,7 +127,7 @@ TEST_CASE("Response Matrix Generation") {
     }
 
     SECTION("First Rows Copy + Dimensionality Check") {
-        DesignMat tst = DesignMat(100,  dbP,  dbQ, r, 0.75, 0.25);
+        DesignMat tst = DesignMat(100, dbM, dbF, r, 0.75, 0.25);
         gsl_matrix *bad_x = gsl_matrix_calloc(101, 3);
         REQUIRE_THROWS(tst.genResponses(bad_x));
         gsl_matrix *bad_x2 = gsl_matrix_calloc(100, 4);
@@ -148,15 +148,15 @@ TEST_CASE("Response Matrix Generation") {
         auto *tst2 = new BetaGen(2, 50, r);
         auto *tst3 = new BetaGen(-1, 500, r);
 
-        DesignMat true1 = DesignMat(100,  dbP,  dbQ, r, 0.75, 0.25);
-        DesignMat true2 = DesignMat(100,  tst2,  dbQ, r, 0.75, 0.25);
-        DesignMat true3 = DesignMat(100,  dbP,  tst3, r, 0.75, 0.25);
+        DesignMat true1 = DesignMat(100, dbM, dbF, r, 0.75, 0.25);
+        DesignMat true2 = DesignMat(100, tst2, dbF, r, 0.75, 0.25);
+        DesignMat true3 = DesignMat(100, dbM, tst3, r, 0.75, 0.25);
 
         gsl_matrix *ex = gsl_matrix_calloc(100, 3);
         // for (int i = 0; i < 1000; i++) { // Random process, so we gotta check it multiple times.
             CHECK(true1.genResponses(ex) >= true1.tallyGrps()['X']); // Some P and Q will satisfice.
-            CHECK(true2.genResponses(ex) >= true2.tallyGrps()['X'] + true2.tallyGrps()['P']); // All X and P satisfice.
-            CHECK(true3.genResponses(ex) <= 100 - true3.tallyGrps()['Q']); // No Q satisfice.
+            CHECK(true2.genResponses(ex) >= true2.tallyGrps()['X'] + true2.tallyGrps()['M']); // All X and P satisfice.
+            CHECK(true3.genResponses(ex) <= 100 - true3.tallyGrps()['F']); // No Q satisfice.
         // }
     }
 
@@ -164,8 +164,8 @@ TEST_CASE("Response Matrix Generation") {
         auto *tst2 = new BetaGen(2, 50, r);
         auto *tst3 = new BetaGen(-1, 500, r);
 
-        DesignMat true1 = DesignMat(10000,  dbP,  dbQ, r, 0.0, 0.0);
-        DesignMat true2 = DesignMat(10000,  tst2,  dbQ, r, 0.5, 0.0);
+        DesignMat true1 = DesignMat(10000, dbM, dbF, r, 0.0, 0.0);
+        DesignMat true2 = DesignMat(10000, tst2, dbF, r, 0.5, 0.0);
         DesignMat true3 = DesignMat(10000,  tst3,  tst3, r, 0.5, 0.5);
         DesignMat true4 = DesignMat(10000,  tst2,  tst3, r, 0.5, 0.5);
 
@@ -189,9 +189,9 @@ TEST_CASE("Response Matrix Generation") {
 
             true4.genResponses(ex); // All Ps satisfice. Q == All Q + One Half of P.
             grps = gsl_matrix_column(ex, 2);
-            double exp_q = (double) (true4.tallyGrps()['Q'] + true4.tallyGrps()['P']/2) / 10000.0;
+            double exp_f = (double) (true4.tallyGrps()['F'] + true4.tallyGrps()['M']/2) / 10000.0;
             CHECK(gsl_stats_mean(grps.vector.data, grps.vector.stride, grps.vector.size) ==
-                Catch::Detail::Approx(exp_q).margin(0.05));
+                Catch::Detail::Approx(exp_f).margin(0.05));
         // }
     }
 

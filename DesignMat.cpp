@@ -4,30 +4,40 @@
 
 #include "DesignMat.h"
 
-DesignMat::DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, float pQ) {
-    // Assigns groups to respondents and builds true design mat.
+DesignMat::DesignMat(int n, BetaGen *bM, BetaGen *bF, gsl_rng *r, float pM, float pF) {
+    // Assigns respondents to groups and builds true design matrix.
 
     // Basic error checking.
     if (n <= std::min(TK, MK)) throw std::length_error("Too few observations for number of variables.");
-    if ((pP - 1) * pP > 0 || (pQ - 1) * pQ > 0) {
-        throw std::out_of_range("pP or pQ are outside a possible range [0, 1].");
-    } else if (pP + pQ > 1) {
-        throw std::out_of_range("pP and pQ sum to more than one.");
+    if ((pM - 1) * pM > 0 || (pF - 1) * pF > 0) {
+        throw std::out_of_range("pM or pF are outside a possible range [0, 1].");
+    } else if (pM + pF > 1) {
+        throw std::out_of_range("pM and pF sum to more than one.");
     }
     _n = n;
-    _pP = pP;
-    _pQ = pQ;
+    _pM = pM;
+    _pF = pF;
 
-    _bP = bP;
-    _bQ = bQ;
+    _bM = bM;
+    _bF = bF;
     _r = r;
 
     // Build list of group memberships. // VERIFIED
+    int nM = (int) lround((float) _n * _pM);
+    int nF, nX;
+    if (_pM + _pF == 1) {
+        nF = _n - nM;
+        nX = 0;
+    } else {
+        nF = (int) lround((float) _n * _pF);
+        nX = _n - nM - nF;
+    }
+
     auto it = _grps.end();
-    _grps.insert(it, ceil((float) _n * _pP), 'P');
+    _grps.insert(it, nM, 'M');
     it = _grps.end();
-    _grps.insert(it, ceil((float) _n * _pQ), 'Q');
-    if (_grps.size() != _n) {
+    _grps.insert(it, nF, 'F');
+    if (nX != 0) {
         it = _grps.end();
         _grps.insert(it, (_n - _grps.size()), 'X');
     }
@@ -46,10 +56,10 @@ DesignMat::DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, floa
         gsl_vector_set(&row_i.vector, 1, gsl_ran_ugaussian(r));
         group_i = _grps[i];
         switch (group_i) {
-            case 'P':
+            case 'M':
                 // Do nothing, as the P will be the reference group.
                 break;
-            case 'Q':
+            case 'F':
                 gsl_vector_set(&row_i.vector, 2, 1);
                 break;
             case 'X':
@@ -64,14 +74,14 @@ DesignMat::DesignMat(int n, BetaGen *bP, BetaGen *bQ, gsl_rng *r, float pP, floa
 
 std::map<char, int> DesignMat::tallyGrps() { // Verified
     // Makes a tally of the number of group members
-    int nP = 0, nQ = 0, nX = 0;
+    int nM = 0, nF = 0, nX = 0;
     for (char i : _grps) {
         switch (i) {
-            case 'P':
-                ++nP;
+            case 'M':
+                ++nM;
                 break;
-            case 'Q':
-                ++nQ;
+            case 'F':
+                ++nF;
                 break;
             case 'X':
                 ++nX;
@@ -80,8 +90,8 @@ std::map<char, int> DesignMat::tallyGrps() { // Verified
                 throw std::length_error("There are members with an invalid group.");
         }
     }
-    if (nP + nQ + nX != _n) throw std::length_error("Not every individual has an assigned group.");
-    return { {'P', nP}, {'Q', nQ}, {'X', nX} };
+    if (nM + nF + nX != _n) throw std::length_error("Not every individual has an assigned group.");
+    return { {'M', nM}, {'F', nF}, {'X', nX} };
 }
 
 std::vector<double> DesignMat::summary(bool head) { // TESTED!
@@ -117,6 +127,7 @@ const gsl_matrix* DesignMat::getTX() {
 int DesignMat::genResponses(gsl_matrix *eX) { // Validated!
    // Takes in an empty design matrix, then copies tX data into it; however, column = 2 is binary responses to survey q.
    // Returns number of satisficiers.
+
    int ns = 0;
    if ((eX->size1 != _tX->size1) || (eX->size2 != MK)) throw std::length_error("Dimension mismatch.");
 
@@ -134,19 +145,19 @@ int DesignMat::genResponses(gsl_matrix *eX) { // Validated!
    char grp_i;
    for (int i = 0; i < _tX->size1; i++) {
        subtX = gsl_matrix_subrow(_tX, i, 2, 2); // Subrow of i'th group membership
-       grp_i = gsl_vector_isnull(&subtX.vector) ? 'P' : (gsl_vector_max_index(&subtX.vector) == 0) ? 'Q' : 'X';
+       grp_i = gsl_vector_isnull(&subtX.vector) ? 'M' : (gsl_vector_max_index(&subtX.vector) == 0) ? 'F' : 'X';
 
        switch (grp_i) {
-           case 'P':
-               if (_bP->betaBernR()) {
+           case 'M':
+               if (_bM->betaBernR()) {
                    gsl_vector_set(&subeX.vector, i, gsl_ran_bernoulli(_r, 0.5));
                    ns++;
                } else {
                    gsl_vector_set(&subeX.vector, i, 0);
                }
                break;
-           case 'Q':
-               if (_bQ->betaBernR()) {
+           case 'F':
+               if (_bF->betaBernR()) {
                    gsl_vector_set(&subeX.vector, i, gsl_ran_bernoulli(_r, 0.5));
                    ns++;
                } else {
@@ -170,11 +181,11 @@ void DesignMat::getDesignMat(std::vector<float> &v) {
     // Appends parameters of design matrix (N; Abs. Count of P, Q, and X; Beta Dists for P and Q.)
     v.push_back((float) _n);
     std::map<char, int> grps = tallyGrps();
-    v.push_back((float) grps['P']);
-    v.push_back((float) grps['Q']);
+    v.push_back((float) grps['M']);
+    v.push_back((float) grps['F']);
     v.push_back((float) grps['X']);
-    _bP->getBetaDist(v);
-    _bQ->getBetaDist(v);
+    _bM->getBetaDist(v);
+    _bF->getBetaDist(v);
 }
 
 BetaGen::BetaGen(float mode, float conc, gsl_rng *r, bool print) { // VALIDATED
@@ -205,7 +216,7 @@ int BetaGen::betaBernR() { // VALIDATED
     return (_bh == -1) ? 0 : (_bh == 1) ? 1 : gsl_ran_bernoulli(_r, gsl_ran_beta(_r, _a, _b)); // NOLINT(cppcoreguidelines-narrowing-conversions)
 }
 
-void BetaGen::getBetaDist(std::vector<float> &v) { //
+void BetaGen::getBetaDist(std::vector<float> &v) const { //
     // Prints A and B for distribution (A and B are both negative if beh == -1, both 0 if beh == 1
     (_bh == -1) ? v.push_back(-1) : (_bh == 1) ? v.push_back(0) : v.push_back(_a);
     (_bh == -1) ? v.push_back(-1) : (_bh == 1) ? v.push_back(0) : v.push_back(_b);
