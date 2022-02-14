@@ -18,11 +18,15 @@ private:
     gsl_vector * _betaHat;
     gsl_vector * _betaSE;
     double _rsq;
+
+    gsl_vector * _betaHatN;
+    gsl_vector * _betaSEN;
+    double _rsqN;
 public:
     LmOLS(const gsl_matrix *X, const gsl_vector *Y);
 
-    void getBetaHat(std::vector<float> &v);
-    void getBetaSE(std::vector<float> &v);
+    void getBetaHat(std::vector<float> &v, bool norm = false);
+    void getBetaSE(std::vector<float> &v, bool norm = false);
 
-    float getRSQ() const;
+    float getRSQ(bool norm = false) const;
 };
