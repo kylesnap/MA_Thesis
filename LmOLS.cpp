@@ -18,7 +18,7 @@ LmOLS::LmOLS(const gsl_matrix *X, const gsl_vector *y) {
 
     // Normalize XN
     gsl_matrix_set_all(XN, 1);
-    for (int i = 1; i < XN->size2; i++) {
+    for (int i = 1; i < XN->size2; i++) { // Start at the second column, because the first is for c. intercept.
         gsl_vector_const_view temp = gsl_matrix_const_column(X, i);
         double mean = gsl_stats_mean(temp.vector.data, temp.vector.stride, temp.vector.size);
         double sd = gsl_stats_sd(temp.vector.data, temp.vector.stride, temp.vector.size);

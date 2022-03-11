@@ -16,9 +16,6 @@ SimCell::SimCell(int n, float varErr, std::tuple<float, float> betaM, std::tuple
     _varErr = varErr;
     _r = r;
 
-    // Handles odd sample sizes silently.
-    n = n%2 == 1 ? n - 1 : n;
-
     // Construct objects -- Errors will be thrown by class methods.
     auto *bM = new BetaGen(std::get<0>(betaM), std::get<1>(betaM), r);
     auto *bF = new BetaGen(std::get<0>(betaF), std::get<1>(betaF), r);
@@ -73,6 +70,9 @@ std::string SimCell::run() {
         mod->getBetaHat(v);
         mod->getBetaSE(v);
         v.push_back(mod->getRSQ());
+        mod->getBetaHat(v, true);
+        mod->getBetaSE(v, true);
+        v.push_back(mod->getRSQ(true));
         v.push_back((float) ns);
 
         gsl_vector_view newCount = gsl_matrix_column(resp, 2);
