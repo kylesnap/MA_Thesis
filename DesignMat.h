@@ -1,5 +1,6 @@
 //
 // Created by Kyle Dewsnap on 2021-10-15.
+// Defines the design matrix object, and the beta-bern val gen.
 //
 
 # include <gsl/gsl_matrix.h>

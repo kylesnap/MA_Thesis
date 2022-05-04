@@ -1,5 +1,5 @@
 // SimCell.cpp
-// Implements
+// Implements the sim cell class
 // Kyle Dewsnap
 // 16SEP21
 

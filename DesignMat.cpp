@@ -1,5 +1,6 @@
 //
 // Created by Kyle Dewsnap on 2021-10-15.
+// Implements functions for the design matrix and beta-bernoulli generator.
 //
 
 #include "DesignMat.h"

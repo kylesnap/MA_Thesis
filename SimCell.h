@@ -1,5 +1,5 @@
 // SimCell.h
-// Defines CellParam and Cell class.
+// Defines Cell class.
 // Kyle Dewsnap
 // 16SEP21
 

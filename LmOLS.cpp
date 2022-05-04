@@ -1,5 +1,5 @@
 // LmOLS.cpp
-// Fits the log likelihood
+// Fits the linear model
 // Kyle Dewsnap
 // 16SEP21
 

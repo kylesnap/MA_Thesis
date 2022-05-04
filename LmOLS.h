@@ -1,5 +1,6 @@
 //
 // Created by Kyle Dewsnap on 2021-09-27.
+// Defines the linear model object
 //
 
 #include <iostream>

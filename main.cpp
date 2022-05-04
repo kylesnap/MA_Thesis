@@ -60,7 +60,7 @@ int run_chap5(gsl_rng *r, std::ostream *out) {
         }
     }
 
-    int reps = 25;
+    int reps = 100;
     std::tuple<float, float, float, float> trialParams = {0,1,0,1};
     std::vector<float> temp;
     SimCell *cell;
